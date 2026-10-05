@@ -12,11 +12,15 @@ export function parseJSON(text) {
 const str = (v, max = 200) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const arr = (v, max) => (Array.isArray(v) ? v.slice(0, max) : []);
 
-const named = (list, allowed) =>
-  arr(list, 4)
+const named = (list, allowed, max = 4) =>
+  arr(list, max)
     .map((x) => ({ name: str(x?.name, 10), evidence: str(x?.evidence, 160) }))
     .filter((x) => allowed.includes(x.name) && x.evidence)
     .filter((x, i, a) => a.findIndex((y) => y.name === x.name) === i);
+
+// 只差大小寫、標點、引號的「修正」不算錯（語音轉文字決定的），直接丟掉
+const bare = (t) => t.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g, "");
+const realFix = (f) => f.from && f.to && bare(f.from) !== bare(f.to);
 
 export function cleanRewrite(raw, { retry = false } = {}) {
   if (!raw || typeof raw !== "object") throw new Error("not an object");
@@ -27,7 +31,7 @@ export function cleanRewrite(raw, { retry = false } = {}) {
     tone: { label, note: str(raw.tone?.note, 200) },
     fixes: arr(raw.fixes, 3)
       .map((f) => ({ from: str(f?.from, 80), to: str(f?.to, 80), note: str(f?.note, 120) }))
-      .filter((f) => f.from && f.to),
+      .filter(realFix),
     better: arr(raw.better, 3)
       .map((b) => ({
         en: str(b?.en, 200),
@@ -36,8 +40,8 @@ export function cleanRewrite(raw, { retry = false } = {}) {
         giving: GIVINGS.includes(b?.giving) ? b.giving : "",
       }))
       .filter((b) => b.en),
-    acts: named(raw.acts, ACTS),
-    givings: named(raw.givings, GIVINGS),
+    acts: named(raw.acts, ACTS, 2),
+    givings: named(raw.givings, GIVINGS, 2),
     // 重點字只留單字（前端用字典原形標示）；若 AI 給了片語就拆開取較長的字
     keys: [...new Set(arr(raw.keys, 3).flatMap((k) => str(k, 40).split(/\s+/)).filter((w) => /^[A-Za-z][A-Za-z'-]{2,}$/.test(w)))].slice(0, 3),
   };
@@ -69,7 +73,7 @@ export function cleanAnalyze(raw, userTurns) {
     level: /^(A1|A2|B1|B2|C1|C2)$/.test(raw.level) ? raw.level : "",
     fixes: arr(raw.fixes, 3)
       .map((f) => ({ from: str(f?.from, 80), to: str(f?.to, 80), note: str(f?.note, 120) }))
-      .filter((f) => f.from && f.to),
+      .filter(realFix),
     acts: named(raw.acts, ACTS),
     givings: named(raw.givings, GIVINGS),
     better: arr(raw.better, 2)
@@ -98,9 +102,9 @@ export function cleanDescribe(raw, { retry = false, story = false } = {}) {
     notice: list(raw.notice ?? raw.missed, 3),
     fixes: arr(raw.fixes, 3)
       .map((f) => ({ from: str(f?.from, 80), to: str(f?.to, 80), note: str(f?.note, 120) }))
-      .filter((f) => f.from && f.to),
-    acts: named(raw.acts, ACTS),
-    givings: named(raw.givings, GIVINGS),
+      .filter(realFix),
+    acts: named(raw.acts, ACTS, 2),
+    givings: named(raw.givings, GIVINGS, 2),
     better: arr(raw.better, 2)
       .map((b) => ({ en: str(b?.en, 200), zh: str(b?.zh, 120), why: str(b?.why, 120), giving: GIVINGS.includes(b?.giving) ? b.giving : "" }))
       .filter((b) => b.en),

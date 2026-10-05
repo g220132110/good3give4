@@ -327,3 +327,12 @@ test("Gemini 每個模型都回額度用完 → ai_quota", async () => {
     globalThis.fetch = realFetch;
   }
 });
+
+test("清理：只差大小寫標點的修正丟掉、三好四給各最多 2 個", async () => {
+  const { cleanDescribe } = await import("../src/schema.js");
+  const r = cleanDescribe({ summary: "ok", fixes: [{ from: "excuse me", to: "Excuse me", note: "x" }, { from: "I say you are amazing!", to: "I say, \"You are amazing!\"", note: "x" }, { from: "She sing", to: "She sings", note: "x" }],
+    acts: [{ name: "說好話", evidence: "a" }, { name: "做好事", evidence: "b" }, { name: "存好心", evidence: "c" }], givings: [{ name: "給人方便", evidence: "a" }, { name: "給人歡喜", evidence: "b" }, { name: "給人信心", evidence: "c" }] });
+  assert.deepEqual(r.fixes.map((f) => f.to), ["She sings"]);
+  assert.equal(r.acts.length, 2);
+  assert.equal(r.givings.length, 2);
+});

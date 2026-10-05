@@ -54,6 +54,7 @@
     if (k.used) add("used", (d.story?.used || []).some((w) => w.toLowerCase() === k.used.toLowerCase()), `要認出 ${k.used}`);
     if (k.tryMore) add("tryMore", (d.story?.try || []).length > 0, "要建議連接詞");
     if (k.notText) add("notText", !JSON.stringify(d).includes(k.notText), `不可出現「${k.notText}」`);
+    if (k.betterAll) { const re = new RegExp(k.betterAll, "i"), b = d.better || []; add("betterAll", b.length > 0 && b.every((x) => re.test(x.en)), `改寫保留原意：${b.filter((x) => !re.test(x.en)).map((x) => x.en).join(" / ") || "全部符合"}`); }
     if (k.same) { const o = results[k.same]; if (o && o.data) add("same", o.data.level === d.level, `程度 ${o.data.level} → ${d.level}`); }
     if (k.deeper) { const o = results[k.deeper]; if (o && o.data) add("deeper", avgWords(d) > avgWords(o.data), `改寫平均字數 ${avgWords(o.data).toFixed(1)} → ${avgWords(d).toFixed(1)}`); }
     return out;
