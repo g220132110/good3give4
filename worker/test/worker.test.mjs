@@ -89,3 +89,132 @@ test("KV 寫入失敗時不影響 AI 功能", async () => {
   const res = await call("/api/rewrite", { text: "hi" }, env, { "x-ep-device": "abc" });
   assert.equal(res.status, 200);
 });
+
+test("Gemini：關閉思考、截斷時報錯、deep 健康檢查回報錯誤", async () => {
+  const realFetch = globalThis.fetch;
+  let sent;
+  globalThis.fetch = async (url, init) => {
+    sent = JSON.parse(init.body);
+    return new Response(JSON.stringify({ candidates: [{ finishReason: "MAX_TOKENS", content: { parts: [{ text: '{"tone":' }] } }] }));
+  };
+  try {
+    const r = await (await call("/api/health?deep=1", undefined, { GEMINI_API_KEY: "k", AI_MODEL: "gemini-2.5-flash" })).json();
+    assert.equal(sent.generationConfig.thinkingConfig.thinkingBudget, 0);
+    assert.equal(r.test, "failed");
+    assert.match(r.error, /MAX_TOKENS/);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("Gemini 太忙時改用備用模型；全部失敗時回報 busy", async () => {
+  const realFetch = globalThis.fetch;
+  const tried = [];
+  const good = '{"tone":{"label":"禮貌","note":"好"},"fixes":[],"better":[{"en":"Thanks!","zh":"謝謝","why":"w","giving":""}],"acts":[],"givings":[],"keys":[]}';
+  globalThis.fetch = async (url) => {
+    const m = String(url).match(/models\/([^:]+)/)[1];
+    tried.push(m);
+    if (m === "gemini-3.8-flash") return new Response("busy", { status: 503 });
+    if (m === "gemini-3.8-flash-lite") return new Response("nope", { status: 404 });
+    return new Response(JSON.stringify({ candidates: [{ finishReason: "STOP", content: { parts: [{ text: good }] } }] }));
+  };
+  try {
+    const r = await (await call("/api/rewrite", { text: "Thanks" }, { GEMINI_API_KEY: "k", AI_PROVIDER: "gemini" })).json();
+    assert.equal(r.demo, false);
+    assert.deepEqual(tried, ["gemini-3.8-flash", "gemini-3.8-flash-lite", "gemini-3.7-flash"]);
+
+    globalThis.fetch = async () => new Response("busy", { status: 503 });
+    const r2 = await (await call("/api/rewrite", { text: "Thanks" }, { GEMINI_API_KEY: "k", AI_PROVIDER: "gemini" })).json();
+    assert.equal(r2.demo, true);
+    assert.equal(r2.reason, "busy");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+// ---------- 對話引擎 ----------
+const gem = (text) => async () => new Response(JSON.stringify({ candidates: [{ finishReason: "STOP", content: { parts: [{ text }] } }] }));
+const GEM = { GEMINI_API_KEY: "k", AI_PROVIDER: "gemini" };
+
+test("chat：情境與輸入檢查", async () => {
+  assert.equal((await call("/api/chat", { scenario: "nope", history: [] })).status, 400);
+  assert.equal((await call("/api/chat", { scenario: "toString", history: [] })).status, 400);
+  assert.equal((await call("/api/chat", { scenario: "exam-fail", history: [] })).status, 400);
+  assert.equal((await call("/api/chat", { scenario: "exam-fail", history: [{ role: "user", text: "x".repeat(301) }] })).status, 400);
+  // 沒有金鑰：回報 busy，讓前端改用示範
+  const r = await call("/api/chat", { scenario: "exam-fail", history: [{ role: "user", text: "Don't give up." }] });
+  assert.equal(r.status, 503);
+  assert.equal((await r.json()).error, "busy");
+});
+
+test("chat：角色回話；最後一輪強制結束", async () => {
+  const realFetch = globalThis.fetch;
+  let sentSystem = "";
+  globalThis.fetch = async (url, init) => {
+    sentSystem = JSON.parse(init.body).systemInstruction.parts[0].text;
+    return gem('{"reply":"Thanks, that helps.","hint":"可以約他一起讀書","done":false}')();
+  };
+  try {
+    const h1 = [{ role: "user", text: "Don't give up." }];
+    const r1 = await (await call("/api/chat", { scenario: "exam-fail", level: "A2", history: h1 }, GEM)).json();
+    assert.equal(r1.data.reply, "Thanks, that helps.");
+    assert.equal(r1.data.done, false);
+    assert.match(sentSystem, /Jamie/);
+    const h4 = [];
+    for (let i = 0; i < 4; i++) h4.push({ role: "user", text: "ok" }, { role: "ai", text: "ok" });
+    h4.pop();
+    const r4 = await (await call("/api/chat", { scenario: "exam-fail", history: h4 }, GEM)).json();
+    assert.equal(r4.data.done, true);
+    assert.match(sentSystem, /last turn/);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("analyze：清理輸出、retry 索引限制在範圍內", async () => {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = gem(JSON.stringify({
+    summary: "你主動鼓勵朋友，很溫暖。", level: "B1", fixes: [],
+    acts: [{ name: "說好話", evidence: "你說 Don't give up" }, { name: "很棒", evidence: "x" }],
+    givings: [{ name: "給人信心", evidence: "你肯定他的努力" }],
+    better: [{ you: "Don't give up.", en: "Don't give up. You worked so hard.", zh: "別放棄，你很努力了。", why: "肯定努力", giving: "給人信心" }],
+    retry: { turn: 9, tip: "加一句具體的協助" },
+  }));
+  try {
+    const history = [{ role: "user", text: "Don't give up." }, { role: "ai", text: "Thanks." }, { role: "user", text: "Bye." }];
+    const r = await (await call("/api/analyze", { scenario: "exam-fail", history }, GEM)).json();
+    assert.equal(r.ok, true);
+    assert.deepEqual(r.data.acts.map((a) => a.name), ["說好話"]);
+    assert.equal(r.data.retry.turn, 1);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("rewrite：對話 Try Again 帶情境上下文", async () => {
+  const realFetch = globalThis.fetch;
+  let userMsg = "";
+  globalThis.fetch = async (url, init) => {
+    userMsg = JSON.parse(init.body).contents[0].parts[0].text;
+    return gem('{"tone":{"label":"溫暖","note":"好"},"fixes":[],"better":[{"en":"You can do it.","zh":"你可以的","why":"w","giving":""}],"acts":[],"givings":[],"keys":[],"compare":{"improved":true,"note":"進步了"}}')();
+  };
+  try {
+    const r = await (await call("/api/rewrite", { text: "You can do it!", previous: "Bye.", scenario: "exam-fail", prompt: "I failed again." }, GEM)).json();
+    assert.equal(r.data.compare.improved, true);
+    assert.match(userMsg, /Jamie/);
+    assert.match(userMsg, /I failed again/);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("chat：回傳中文翻譯", async () => {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = gem('{"reply":"Thank you!","zh":"謝謝你！","hint":"h","done":false}');
+  try {
+    const r = await (await call("/api/chat", { scenario: "good-news", history: [{ role: "user", text: "Congratulations!" }] }, GEM)).json();
+    assert.equal(r.data.zh, "謝謝你！");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

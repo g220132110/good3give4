@@ -1,5 +1,6 @@
 /* Good Talk 內容包：四給情境（畫面顯示用）與示範模式內容。
  * id 與 opener 必須和後端 worker/src/scenarios.js 一致；角色設定只放後端。
+ * openerZh、repliesZh：給初學者看的中文對照。
  * demo：AI 連不到時使用的預寫對話（依輪次）與示範分析，人工撰寫、人工審核。
  */
 App.registerContent("goodtalk", {
@@ -10,12 +11,19 @@ App.registerContent("goodtalk", {
       who: "同學 Jamie 數學考試第二次不及格，覺得自己很笨、想放棄。",
       task: "用英文鼓勵 Jamie，讓他重新有信心。",
       opener: "I studied so hard, but I failed again. Maybe I'm just not good enough.",
+      openerZh: "我很努力讀了，結果又沒過。也許我就是不夠好。",
       demo: {
         replies: [
           "Really? But I always get bad grades in math.",
           "Hmm, maybe you're right. I did better on the last quiz.",
           "That would really help. Can we start this weekend?",
           "Thank you. I feel much better now. You're a good friend.",
+        ],
+        repliesZh: [
+          "真的嗎？可是我數學總是考不好。",
+          "嗯，也許你說得對，我上次小考有進步。",
+          "那真的很有幫助。我們這週末開始好嗎？",
+          "謝謝你，我感覺好多了。你真是好朋友。",
         ],
         hints: ["先接住他的感受，再肯定他的努力", "可以提到他已經進步的地方", "試著提出一個具體的幫忙", "約好時間，讓他知道你會陪他"],
         analysis: {
@@ -33,12 +41,19 @@ App.registerContent("goodtalk", {
       who: "加拿大遊客 Alex 第一次來台灣，在車站附近找不到夜市，不會說中文。",
       task: "用英文幫 Alex 順利找到路。",
       opener: "Excuse me, sorry to bother you. Do you know how to get to the night market?",
+      openerZh: "不好意思，打擾一下。你知道夜市怎麼走嗎？",
       demo: {
         replies: [
           "Oh, great! Is it far from here? Can I walk there?",
           "Thank you! Is there anything you recommend to eat there?",
           "That sounds delicious. I'll try it!",
           "You're so kind. Thank you so much for your help!",
+        ],
+        repliesZh: [
+          "太好了！離這裡遠嗎？可以走路過去嗎？",
+          "謝謝！那裡有什麼推薦的小吃嗎？",
+          "聽起來好好吃，我會去試試看！",
+          "你人真好，非常謝謝你的幫忙！",
         ],
         hints: ["先說清楚方向", "告訴他走路大概要多久", "可以推薦一樣夜市小吃", "祝他玩得愉快"],
         analysis: {
@@ -56,12 +71,19 @@ App.registerContent("goodtalk", {
       who: "朋友 Sam 沒有考上想讀的科系，很擔心以後怎麼辦。",
       task: "用英文陪 Sam 看見接下來的路。",
       opener: "I didn't get into the program I wanted. I don't know what to do now.",
+      openerZh: "我沒考上想讀的科系，現在不知道該怎麼辦。",
       demo: {
         replies: [
           "I know, but I really wanted it. Everyone else got in.",
           "Maybe. I never thought about other options.",
           "That's true. I could try again next year, right?",
           "Thanks for listening. I feel a little more hopeful now.",
+        ],
+        repliesZh: [
+          "我知道，可是我真的很想讀。其他人都考上了。",
+          "也許吧，我從來沒想過其他選擇。",
+          "也對，我明年可以再試一次，對吧？",
+          "謝謝你聽我說，我現在覺得比較有希望了。",
         ],
         hints: ["先表示你理解他的失落", "提醒他還有其他選擇", "可以一起想下一步", "讓他知道你會支持他"],
         analysis: {
@@ -79,12 +101,19 @@ App.registerContent("goodtalk", {
       who: "同事 Mia 考了三次，終於通過駕照考試，很興奮地跟你分享。",
       task: "用英文分享 Mia 的喜悅，讓她更開心。",
       opener: "Guess what? I finally passed my driving test! Third time lucky!",
+      openerZh: "你猜怎樣？我終於考過駕照了！第三次就成功！",
       demo: {
         replies: [
           "Thank you! I was so nervous this time.",
           "Yes! I practiced every weekend.",
           "Maybe I'll drive to the beach. Do you want to come?",
           "Yay! It's a plan. Thanks for being so happy for me!",
+        ],
+        repliesZh: [
+          "謝謝！這次我好緊張。",
+          "對啊！我每個週末都在練習。",
+          "也許我會開車去海邊，你要一起來嗎？",
+          "耶！就這麼說定了。謝謝你這麼替我開心！",
         ],
         hints: ["先恭喜她", "問問她當時的感受或過程", "肯定她不放棄的努力", "可以約她一起慶祝"],
         analysis: {

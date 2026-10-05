@@ -2,12 +2,14 @@
 //   node dev/server.mjs            → 示範模式（不需金鑰）
 //   ANTHROPIC_API_KEY=... node dev/server.mjs   → 真的呼叫 Claude
 //   AI_PROVIDER=gemini GEMINI_API_KEY=... node dev/server.mjs
+//   FAKE_AI=1 node dev/server.mjs  → 測試用假 AI（不連網，測 AI 路徑）
 // 開啟 http://localhost:8787/
 import http from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import worker from "../worker/src/index.js";
+if (process.env.FAKE_AI) { await import("./fake-ai.mjs"); process.env.GEMINI_API_KEY ||= "fake"; process.env.AI_PROVIDER = "gemini"; }
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const PORT = Number(process.env.PORT || 8787);

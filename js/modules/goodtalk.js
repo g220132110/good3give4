@@ -6,8 +6,9 @@
  * AI：/api/chat（角色回話）、/api/analyze（對話分析）、/api/rewrite（Try Again）
  * 流程：選情境 → 和 AI 角色對話（最多 4 輪）→ 分析「你給了對方什麼」→ Try Again → 前後對照
  *
- * 示範模式：第一句就連不到 AI 時，整段改用內容包的預寫對話；
- * 對話中途 AI 太忙時，讓使用者選「再送一次」或「用示範內容繼續」。
+ * 示範模式：沒有設定 AI 時，整段改用內容包的預寫對話；
+ * AI 太忙時（任何一輪），讓使用者選「再送一次」或「用示範內容繼續」。
+ * 中文對照：AI 每句回話附中文，可用「中文」開關顯示／隱藏（初級預設顯示）。
  * ========================================================================= */
 (function () {
   const { $, esc } = App;
@@ -17,6 +18,9 @@
   const TAB_ICON = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h11v8H7l-4 3z"/><path d="M10 16h7l4 3V9h-4"/></svg>`;
 
   let st = null;
+  // 中文對照：初級預設顯示，其他預設隱藏；使用者切換後記住
+  const zhOn = () => App.store.get("goodtalk.zh", App.profile.level == 1);
+  const zhLine = (zh) => (zh ? `<div class="gt-zh">${esc(zh)}</div>` : "");
   const scenes = () => (App.content.goodtalk || []).flatMap((p) => p.scenarios);
   const sceneOf = (id) => scenes().find((s) => s.id === id);
   const userTurns = () => st.history.filter((h) => h.role === "user").length;
@@ -64,16 +68,16 @@
     App.speech.speak(sceneOf(sid).opener, 0.9);
   }
 
-  function bubble(role, text, i) {
+  function bubble(role, text, i, zh) {
     if (role === "ai") return `
       <div class="gt-msg gt-ai" data-from="Good Talk">
-        <div class="gt-text en">${App.ui.tokens(text)}</div>
+        <div class="gt-text"><div class="en">${App.ui.tokens(text)}</div>${zhLine(zh)}</div>
         <button class="mini" data-say="${i}" aria-label="播放">${ICON.play}</button>
       </div>`;
     return `<div class="gt-msg gt-me"><div class="gt-text">${esc(text)}</div></div>`;
   }
 
-  function lines() { return [{ role: "ai", text: sceneOf(st.sid).opener }, ...st.history]; }
+  function lines() { const s = sceneOf(st.sid); return [{ role: "ai", text: s.opener, zh: s.openerZh }, ...st.history]; }
 
   function renderChat() {
     if (!$("#gtList")) return; // 已切換到其他分頁
@@ -81,7 +85,10 @@
     $("#gtChat").innerHTML = `
       <div class="section-head">
         <div><div class="label">Good Talk · ${esc(s.en)}</div><h2>${esc(s.zh)}</h2></div>
-        <button class="linkbtn" data-act="leave">離開</button>
+        <span class="row" style="gap:12px;align-items:center;flex-wrap:nowrap">
+          <button class="gt-zhbtn" data-act="zh" aria-pressed="${zhOn()}" title="顯示／隱藏中文翻譯">中文</button>
+          <button class="linkbtn" data-act="leave">離開</button>
+        </span>
       </div>
       <div class="panel gt-task">
         <div class="label">你的任務</div>
@@ -89,8 +96,8 @@
         <div class="muted" style="font-size:.9rem">${esc(s.who)}</div>
       </div>
       ${st.demoMode ? App.ask.notice(true, "AI 目前連不到，這段對話使用預先寫好的回應。") : ""}
-      <div class="gt-log" id="gtLog">
-        ${lines().map((l, i) => bubble(l.role, l.text, i)).join("")}
+      <div class="gt-log ${zhOn() ? "" : "gt-nozh"}" id="gtLog">
+        ${lines().map((l, i) => bubble(l.role, l.text, i, l.zh)).join("")}
         ${st.pending ? `<div class="gt-msg gt-ai gt-typing"><span></span><span></span><span></span></div>` : ""}
       </div>
       <div id="gtStall"></div>
@@ -124,6 +131,10 @@
     if (t.dataset.say) return App.speech.speak(lines()[+t.dataset.say].text, 0.9);
     const act = t.dataset.act;
     if (act === "leave") { App.speech.stop(); renderList(); }
+    else if (act === "zh") {
+      const on = !zhOn(); App.store.set("goodtalk.zh", on);
+      t.setAttribute("aria-pressed", on); $("#gtLog").classList.toggle("gt-nozh", !on);
+    }
     else if (act === "hint") { $("#gtHint").hidden = false; t.hidden = true; }
     else if (act === "finish") analyze();
     else if (act === "resend") askAI();
@@ -141,19 +152,20 @@
     st.pending = true; st.stalled = false;
     renderChat();
     const n = userTurns(), s = sceneOf(st.sid);
-    let reply, done = false, hint = "";
+    let reply, zh = "", done = false, hint = "";
     if (!st.demoMode) {
-      const r = await App.ai.call("chat", { scenario: st.sid, history: st.history });
-      if (r.ok) { reply = r.data.reply; hint = r.data.hint; done = r.data.done; st.aiUsed = true; }
-      else if (!st.aiUsed && (r.offline || r.quota)) st.demoMode = true; // 一開始就連不到：整段用示範
+      const r = await App.ai.call("chat", { scenario: st.sid, history: st.history.map(({ role, text }) => ({ role, text })) });
+      if (r.ok) { reply = r.data.reply; zh = r.data.zh; hint = r.data.hint; done = r.data.done; st.aiUsed = true; }
+      else if (!App.ai.endpoint()) st.demoMode = true; // 沒有設定 AI：整段用示範
       else { st.pending = false; st.stalled = r.message || App.ask.BUSY; renderChat(); return renderStall(); }
     }
     if (st.demoMode) {
-      reply = s.demo.replies[Math.min(n - 1, s.demo.replies.length - 1)];
+      const k = Math.min(n - 1, s.demo.replies.length - 1);
+      reply = s.demo.replies[k]; zh = (s.demo.repliesZh || [])[k] || "";
       hint = s.demo.hints[Math.min(n, s.demo.hints.length - 1)];
       done = n >= MAX_TURNS;
     }
-    st.history.push({ role: "ai", text: reply });
+    st.history.push({ role: "ai", text: reply, zh });
     st.hint = hint;
     st.done = done || n >= MAX_TURNS;
     st.pending = false;
@@ -178,7 +190,7 @@
     App.ask.busy("gtC", true, "AI 分析中…");
     let data, demo = st.demoMode, note = "";
     if (!st.demoMode) {
-      const r = await App.ai.call("analyze", { scenario: st.sid, history: st.history });
+      const r = await App.ai.call("analyze", { scenario: st.sid, history: st.history.map(({ role, text }) => ({ role, text })) });
       if (r.ok) data = r.data;
       else { demo = true; note = r.offline || r.quota ? App.ask.BUSY : r.message; }
     }
@@ -202,9 +214,9 @@
   function promptBefore(k) {
     const all = lines(); let seen = -1;
     for (let i = 0; i < all.length; i++) {
-      if (all[i].role === "user" && ++seen === k) return { prompt: all[i - 1].text, prev: all[i].text };
+      if (all[i].role === "user" && ++seen === k) return { prompt: all[i - 1].text, promptZh: all[i - 1].zh, prev: all[i].text };
     }
-    return { prompt: all[0].text, prev: "" };
+    return { prompt: all[0].text, promptZh: all[0].zh, prev: "" };
   }
 
   function renderResult() {
@@ -240,7 +252,7 @@
           </div>`).join("")}</div>` : ""}
       ${rt ? `<div class="panel sb-try">
         <div class="label">Try again</div><h2>換你再說一次</h2>
-        <div class="gt-msg gt-ai"><div class="gt-text en">${esc(rt.prompt)}</div></div>
+        <div class="gt-msg gt-ai ${zhOn() ? "" : "gt-nozh"}"><div class="gt-text"><div class="en">${esc(rt.prompt)}</div>${zhLine(rt.promptZh)}</div></div>
         ${rt.prev ? `<div class="muted" style="font-size:.9rem">你當時說：${esc(rt.prev)}</div>` : ""}
         ${a.retry.tip ? `<div class="tip" style="margin:0">${esc(a.retry.tip)}</div>` : ""}
         ${App.ask.block("gtR", "用說的或打字")}
@@ -289,7 +301,7 @@
       <div class="panel ${c.improved ? "sb-up" : ""}">
         <div class="label">Before · After</div>
         <h2>${c.improved ? "你進步了！" : "再接再厲"}</h2>
-        <div class="gt-msg gt-ai"><div class="gt-text en">${esc(rt.prompt)}</div></div>
+        <div class="gt-msg gt-ai ${zhOn() ? "" : "gt-nozh"}"><div class="gt-text"><div class="en">${esc(rt.prompt)}</div>${zhLine(rt.promptZh)}</div></div>
         <div class="sb-pair">
           ${rt.prev ? `<div><span class="label">第一次</span><div class="en">${esc(rt.prev)}</div></div>` : ""}
           <div class="after"><span class="label">第二次</span><div class="en">${esc(rt.text)}</div></div>

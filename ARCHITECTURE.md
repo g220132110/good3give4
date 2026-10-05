@@ -240,6 +240,8 @@ App.dict.add({ "yield": "jiːld|n.|殖利率、收益率", ... });
 | `App.ai.call(任務, 輸入, {timeout})` | 所有 AI 呼叫的唯一出入口；回傳 `{ok, demo, data}` 或 `{ok:false, offline, quota, message}` |
 | `App.ai.quota()` | 本機今日用量 |
 | `App.virtue.badge(名稱)` / `log(名稱, 來源)` / `stats()` | 三好四給徽章、Goodness Passport 紀錄（只記次數，不打分數） |
-| `worker/` | Cloudflare Workers 後端：提示詞、金鑰、用量上限、JSON 驗證、示範模式 |
+| `App.ask.block/wire/shadow/notice` | AI 練習模組共用：麥克風＋打字、跟讀評分、示範提示（含「再送一次」） |
+| `App.virtue.panel(結果)` / `logResult(結果, 來源)` | 「做得好的地方」面板、依分析結果記錄 |
+| `worker/` | Cloudflare Workers 後端：/api/rewrite、/api/chat、/api/analyze；提示詞、情境、金鑰、JSON 驗證、備用模型 |
 
 模組連不到 AI 時，一律改用自己內容包裡的 `demo` 結果，並顯示「示範模式」。

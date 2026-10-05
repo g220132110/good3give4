@@ -51,3 +51,36 @@ export function cleanRewrite(raw, { retry = false } = {}) {
   }
   return out;
 }
+
+export function cleanChat(raw) {
+  const reply = str(raw?.reply, 300);
+  if (!reply) throw new Error("empty reply");
+  return { reply, zh: str(raw?.zh, 200), hint: str(raw?.hint, 120), done: raw?.done === true };
+}
+
+export function cleanAnalyze(raw, userTurns) {
+  if (!raw || typeof raw !== "object") throw new Error("not an object");
+  const summary = str(raw.summary, 300);
+  if (!summary) throw new Error("missing summary");
+  let turn = Number.isInteger(raw.retry?.turn) ? raw.retry.turn : userTurns - 1;
+  if (turn < 0 || turn >= userTurns) turn = Math.max(0, userTurns - 1);
+  return {
+    summary,
+    level: /^(A1|A2|B1|B2|C1|C2)$/.test(raw.level) ? raw.level : "",
+    fixes: arr(raw.fixes, 3)
+      .map((f) => ({ from: str(f?.from, 80), to: str(f?.to, 80), note: str(f?.note, 120) }))
+      .filter((f) => f.from && f.to),
+    acts: named(raw.acts, ACTS),
+    givings: named(raw.givings, GIVINGS),
+    better: arr(raw.better, 2)
+      .map((b) => ({
+        you: str(b?.you, 300),
+        en: str(b?.en, 200),
+        zh: str(b?.zh, 120),
+        why: str(b?.why, 120),
+        giving: GIVINGS.includes(b?.giving) ? b.giving : "",
+      }))
+      .filter((b) => b.en),
+    retry: { turn, tip: str(raw.retry?.tip, 120) },
+  };
+}

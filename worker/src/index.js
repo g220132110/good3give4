@@ -1,11 +1,12 @@
 // Good English, Good Life — 後端代理（Cloudflare Workers）
 //
 // 前端只送「任務名稱＋使用者文字」，提示詞、金鑰、用量上限都在這裡。
-// 路由：POST /api/rewrite   GET /api/health
+// 路由：POST /api/rewrite  /api/chat  /api/analyze   GET /api/health
 
 import { LEVELS } from "./rubric.js";
-import { REWRITE_CONTEXTS, rewriteSystem, retrySystem, rewriteUser } from "./prompts.js";
-import { parseJSON, cleanRewrite } from "./schema.js";
+import { REWRITE_CONTEXTS, rewriteSystem, retrySystem, rewriteUser, chatSystem, analyzeSystem, transcript } from "./prompts.js";
+import { parseJSON, cleanRewrite, cleanChat, cleanAnalyze } from "./schema.js";
+import { SCENARIOS } from "./scenarios.js";
 import { pickProvider } from "./providers.js";
 import { mockRewrite } from "./mock.js";
 
@@ -77,6 +78,7 @@ async function runModel(provider, env, system, user, clean) {
       return clean(parseJSON(text));
     } catch (err) {
       lastErr = err;
+      if (err.provider) break; // 連線問題已由備用模型處理；只有格式錯誤才重試
     }
   }
   throw lastErr;
@@ -88,7 +90,10 @@ async function handleRewrite(body, env) {
   const text = typeof body.text === "string" ? body.text.trim() : "";
   const previous = typeof body.previous === "string" ? body.previous.trim() : "";
   const level = LEVELS.includes(body.level) ? body.level : "B1";
-  const context = body.context in REWRITE_CONTEXTS ? body.context : "free";
+  const context = Object.hasOwn(REWRITE_CONTEXTS, body.context || "") ? body.context : "free";
+  // 對話的 Try Again：帶情境與對方說的話，讓分析有上下文
+  const scenario = Object.hasOwn(SCENARIOS, body.scenario || "") ? SCENARIOS[body.scenario] : null;
+  const prompt = typeof body.prompt === "string" ? body.prompt.trim().slice(0, MAX_TEXT) : "";
   if (!text) return { status: 400, error: "empty", message: "請先輸入或說出一句英文。" };
   if (text.length > MAX_TEXT || previous.length > MAX_TEXT)
     return { status: 400, error: "too_long", message: `一次最多 ${MAX_TEXT} 個字元。` };
@@ -102,17 +107,87 @@ async function handleRewrite(body, env) {
       provider,
       env,
       retry ? retrySystem(level) : rewriteSystem(level),
-      rewriteUser({ text, context, previous }),
+      rewriteUser({ text, context, previous, scenario, prompt }),
       (raw) => cleanRewrite(raw, { retry }),
     );
     return { data, demo: false };
   } catch (err) {
     console.error("rewrite failed:", err.message);
-    return { data: mockRewrite({ text, previous }), demo: true };
+    return { data: mockRewrite({ text, previous }), demo: true, reason: err.busy ? "busy" : "error" };
   }
 }
 
-const TASKS = { rewrite: handleRewrite };
+// ---------- 任務：chat、analyze（對話引擎） ----------
+// 失敗時回傳 busy，由前端決定改用內容包示範或請使用者再送一次（對話內容無法用固定示範接續）。
+
+function readDialogue(body) {
+  if (!Object.hasOwn(SCENARIOS, body.scenario || "")) return { error: { status: 400, error: "scenario", message: "找不到這個情境。" } };
+  const scenario = SCENARIOS[body.scenario];
+  const raw = Array.isArray(body.history) ? body.history : [];
+  if (raw.length > scenario.maxTurns * 2) return { error: { status: 400, error: "too_long", message: "對話太長了。" } };
+  const history = [];
+  for (const h of raw) {
+    const text = typeof h?.text === "string" ? h.text.trim() : "";
+    if (!text || text.length > MAX_TEXT || !["user", "ai"].includes(h.role))
+      return { error: { status: 400, error: "bad_history", message: `每句最多 ${MAX_TEXT} 個字元。` } };
+    history.push({ role: h.role, text });
+  }
+  const level = LEVELS.includes(body.level) ? body.level : "B1";
+  return { scenario, history, level, userTurns: history.filter((h) => h.role === "user").length };
+}
+
+const busy = (err) => ({
+  status: 503,
+  error: "busy",
+  message: err && err.status === 404 ? "AI 模型設定有誤，請通知管理者。" : "AI 目前使用的人太多，稍等幾秒再送出一次就好。",
+});
+
+async function handleChat(body, env) {
+  const d = readDialogue(body);
+  if (d.error) return d.error;
+  if (!d.history.length || d.history.at(-1).role !== "user")
+    return { status: 400, error: "bad_history", message: "請先說一句話。" };
+  const provider = pickProvider(env);
+  if (!provider) return busy();
+  const lastTurn = d.userTurns >= d.scenario.maxTurns;
+  try {
+    const data = await runModel(
+      provider,
+      env,
+      chatSystem(d.scenario, d.level, lastTurn),
+      `Conversation so far:\n${transcript(d.scenario, d.history)}\n\nReply as the other person.`,
+      cleanChat,
+    );
+    if (lastTurn) data.done = true;
+    return { data, demo: false };
+  } catch (err) {
+    console.error("chat failed:", err.message);
+    return busy(err);
+  }
+}
+
+async function handleAnalyze(body, env) {
+  const d = readDialogue(body);
+  if (d.error) return d.error;
+  if (!d.userTurns) return { status: 400, error: "bad_history", message: "對話裡還沒有你的回答。" };
+  const provider = pickProvider(env);
+  if (!provider) return busy();
+  try {
+    const data = await runModel(
+      provider,
+      env,
+      analyzeSystem(d.scenario, d.level),
+      `Transcript:\n${transcript(d.scenario, d.history)}`,
+      (raw) => cleanAnalyze(raw, d.userTurns),
+    );
+    return { data, demo: false };
+  } catch (err) {
+    console.error("analyze failed:", err.message);
+    return busy(err);
+  }
+}
+
+const TASKS = { rewrite: handleRewrite, chat: handleChat, analyze: handleAnalyze };
 
 // ---------- 入口 ----------
 
@@ -126,7 +201,21 @@ export default {
 
     if (url.pathname === "/api/health") {
       const p = pickProvider(env);
-      return json({ ok: true, provider: p ? p.name : "demo" }, 200, cors.headers);
+      const out = { ok: true, provider: p ? p.name : "demo", model: p ? env.AI_MODEL || p.defaultModel : "" };
+      // /api/health?deep=1：真的呼叫一次模型並回報結果，用來排查設定問題（會消耗 1 次額度）
+      if (p && url.searchParams.get("deep") === "1") {
+        try {
+          const text = await p.complete({ system: rewriteSystem("A2"), user: rewriteUser({ text: "Give me the menu.", context: "restaurant" }), env });
+          cleanRewrite(parseJSON(text));
+          out.test = "ok";
+          if (p.lastModel) out.answeredBy = p.lastModel;
+        } catch (err) {
+          out.ok = false;
+          out.test = "failed";
+          out.error = String(err.message || err).replace(/key=[^&\s]+/g, "key=***").slice(0, 400);
+        }
+      }
+      return json(out, 200, cors.headers);
     }
 
     const task = url.pathname.match(/^\/api\/(\w+)$/)?.[1];
@@ -147,7 +236,7 @@ export default {
     const r = await TASKS[task](body, env);
     if (r.error) return fail(r.error, r.message, r.status, cors.headers);
     return json(
-      { ok: true, demo: r.demo, data: r.data, quota: { used: quota.used, limit: quota.limit } },
+      { ok: true, demo: r.demo, reason: r.reason, data: r.data, quota: { used: quota.used, limit: quota.limit } },
       200,
       cors.headers,
     );

@@ -302,3 +302,8 @@ button.w{border:none;font-family:var(--display)}
 .gt-hint{margin:0;background:var(--near-bg);color:var(--ink);border-radius:10px;padding:8px 12px;font-size:.9rem}
 .gt-end{align-items:flex-start}
 .sb-notice{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+/* Good Talk：中文對照 */
+.gt-zh{margin-top:4px;padding-top:4px;border-top:1px dashed var(--line);font-size:.9rem;color:var(--ink-soft);line-height:1.5}
+.gt-nozh .gt-zh{display:none}
+.gt-zhbtn{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:3px 12px;font-size:.85rem;font-weight:700;color:var(--ink-soft)}
+.gt-zhbtn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
