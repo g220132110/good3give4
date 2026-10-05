@@ -55,6 +55,10 @@
     if (k.tryMore) add("tryMore", (d.story?.try || []).length > 0, "要建議連接詞");
     if (k.notText) add("notText", !JSON.stringify(d).includes(k.notText), `不可出現「${k.notText}」`);
     if (k.betterAll) { const re = new RegExp(k.betterAll, "i"), b = d.better || []; add("betterAll", b.length > 0 && b.every((x) => re.test(x.en)), `改寫保留原意：${b.filter((x) => !re.test(x.en)).map((x) => x.en).join(" / ") || "全部符合"}`); }
+    if (k.betterNone) { const re = new RegExp(k.betterNone, "i"), bad = (d.better || []).filter((x) => re.test(x.en)); add("betterNone", !bad.length, bad.length ? `意思被改掉：${bad.map((x) => x.en).join(" / ")}` : "沒有改掉原意"); }
+    if (k.summaryHas) add("summaryHas", new RegExp(k.summaryHas).test(d.summary || ""), `總評要提到：${k.summaryHas}`);
+    if (k.summaryNot) add("summaryNot", !new RegExp(k.summaryNot).test(d.summary || ""), "總評沒有誤判成錯誤");
+    if (k.replyNot) add("replyNot", !new RegExp(k.replyNot, "i").test(d.reply || ""), `回覆：${d.reply || ""}`);
     if (k.same) { const o = results[k.same]; if (o && o.data) add("same", o.data.level === d.level, `程度 ${o.data.level} → ${d.level}`); }
     if (k.deeper) { const o = results[k.deeper]; if (o && o.data) add("deeper", avgWords(d) > avgWords(o.data), `改寫平均字數 ${avgWords(o.data).toFixed(1)} → ${avgWords(d).toFixed(1)}`); }
     return out;
@@ -77,6 +81,8 @@
     const g = goods(d);
     parts.push(g.length ? g.map((x) => `<span class="q-g">${esc(x)}</span>`).join("") : `<span class="muted">無三好四給</span>`);
     if ((d.fixes || []).length) parts.push(`修正 ${d.fixes.length}`);
+    if (d.reply) parts.unshift(`AI 回覆：<b>${esc(d.reply)}</b>`);
+    if (d.summary && !d.saw) parts.unshift(esc(d.summary));
     if (d.story) parts.push(`連接詞 ${esc((d.story.used || []).join(", ") || "—")}`);
     return parts.join(" · ");
   }
@@ -92,9 +98,9 @@
       const r = results[c.id], s = st[i], p = last[c.id];
       const changed = p && p !== s && s !== "wait" && s !== "run" ? `<small class="q-chg">上次：${LABEL[p]}</small>` : "";
       return `<div class="q-row q-${s}">
-        <div class="q-head"><span class="q-badge">${LABEL[s]}</span><b>${esc(c.id)}</b><span class="muted">${esc(c.group)} · ${c.task === "rewrite" ? "說好話" : "看圖 " + esc(c.input.picture)}</span>${changed}
+        <div class="q-head"><span class="q-badge">${LABEL[s]}</span><b>${esc(c.id)}</b><span class="muted">${esc(c.group)} · ${{ rewrite: "說好話", chat: "對話", analyze: "對話分析" }[c.task] || "看圖 " + esc(c.input.picture)}</span>${changed}
           <button class="linkbtn" data-one="${esc(c.id)}">只跑這題</button></div>
-        <div class="q-in">${esc(c.input.text)}</div>
+        <div class="q-in">${esc(c.input.text || (c.input.history || []).filter((h) => h.role === "user").map((h) => h.text).join(" ／ "))}</div>
         ${c.note ? `<div class="muted q-note">${esc(c.note)}</div>` : ""}
         ${r && r.ok ? `<div class="q-out">${summary(r.data)} <span class="muted">· ${(r.ms / 1000).toFixed(1)} 秒</span></div>
           <div class="q-checks">${r.checks.map((x) => `<span class="${x.pass ? "ok" : x.soft ? "warn" : "bad"}">${x.pass ? "✓" : x.soft ? "△" : "✗"} ${esc(x.msg)}</span>`).join("")}</div>

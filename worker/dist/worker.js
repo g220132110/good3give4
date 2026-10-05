@@ -11,7 +11,7 @@ var RUBRIC = `
 Goodness Rubric (judge ONLY what this one response shows):
 - \u8AAA\u597D\u8A71 Speak Good Words: respectful, no insult or shaming, encouraging, empathetic, grateful.
 - \u505A\u597D\u4E8B Do Good Deeds: offers concrete help, willing to act, solves a real difficulty.
-- \u5B58\u597D\u5FC3 Think Good Thoughts: takes the other person's perspective, avoids quick negative labels, sees a way to improve.
+- \u5B58\u597D\u5FC3 Think Good Thoughts: ONLY when the learner takes the other person's perspective, imagines a possible reason for their behavior or feeling, avoids a quick negative label, or sees a way to improve. Plain politeness or "if you like" is not \u5B58\u597D\u5FC3.
 - \u7D66\u4EBA\u4FE1\u5FC3 Confidence: affirms the other person's ability or effort.
 - \u7D66\u4EBA\u6B61\u559C Joy: brings warmth, thanks, or a positive feeling.
 - \u7D66\u4EBA\u5E0C\u671B Hope: points to a future possibility or a next step.
@@ -21,6 +21,7 @@ Ethics (never break these):
 - Evaluate the RESPONSE, never the learner's personality, morality, religion, or mental state.
 - Never say the learner is a good or bad person. Never give scores for kindness.
 - List an act or giving ONLY if the response clearly shows it, and quote the exact words as evidence.
+- Judge the pragmatic meaning of the WHOLE utterance, not single positive words: a bare greeting ("Hi"), "Good luck" used to brush someone off, or sarcasm is not \u8AAA\u597D\u8A71.
 - Be selective: list at most 2 acts and at most 2 givings, only the clearest ones. Do not stretch weak evidence (a polite "this time" is not hope; describing a scene is not a kind act). When unsure, leave it out.
 - If something is missing, suggest what they could try; never say "you did not ...".
 `;

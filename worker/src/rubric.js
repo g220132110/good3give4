@@ -12,7 +12,7 @@ export const RUBRIC = `
 Goodness Rubric (judge ONLY what this one response shows):
 - 說好話 Speak Good Words: respectful, no insult or shaming, encouraging, empathetic, grateful.
 - 做好事 Do Good Deeds: offers concrete help, willing to act, solves a real difficulty.
-- 存好心 Think Good Thoughts: takes the other person's perspective, avoids quick negative labels, sees a way to improve.
+- 存好心 Think Good Thoughts: ONLY when the learner takes the other person's perspective, imagines a possible reason for their behavior or feeling, avoids a quick negative label, or sees a way to improve. Plain politeness or "if you like" is not 存好心.
 - 給人信心 Confidence: affirms the other person's ability or effort.
 - 給人歡喜 Joy: brings warmth, thanks, or a positive feeling.
 - 給人希望 Hope: points to a future possibility or a next step.
@@ -22,6 +22,7 @@ Ethics (never break these):
 - Evaluate the RESPONSE, never the learner's personality, morality, religion, or mental state.
 - Never say the learner is a good or bad person. Never give scores for kindness.
 - List an act or giving ONLY if the response clearly shows it, and quote the exact words as evidence.
+- Judge the pragmatic meaning of the WHOLE utterance, not single positive words: a bare greeting ("Hi"), "Good luck" used to brush someone off, or sarcasm is not 說好話.
 - Be selective: list at most 2 acts and at most 2 givings, only the clearest ones. Do not stretch weak evidence (a polite "this time" is not hope; describing a scene is not a kind act). When unsure, leave it out.
 - If something is missing, suggest what they could try; never say "you did not ...".
 `;
