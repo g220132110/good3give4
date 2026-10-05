@@ -399,8 +399,10 @@
   /* ---------- 模組介面 ---------- */
   App.registerModule({
     id: "goodtalk", title: "Good Talk", tab: "對話", icon: TAB_ICON, order: 0.6, // order: 0 會被 App 當成 99
-    mount(el) {
+    mount(el, params) {
       el.innerHTML = TEMPLATE;
+      // #/goodtalk/<情境 id>：從其他模組（例如微善任務）直接開始某個情境
+      if (params && params[0] && sceneOf(params[0])) { history.replaceState(null, "", "#/goodtalk"); return start(params[0]); }
       if (!st) return renderList();
       if (st.retry) renderCompare();
       else if (st.analysis) renderResult();

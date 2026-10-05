@@ -5,6 +5,7 @@
 - **第一階段**：後端代理、App.ai、App.virtue、Say It Better（說好話 AI 語氣教練＋Try Again）
 - **第二階段**：對話引擎（/api/chat、/api/analyze）、Good Talk 四給情境對話 4 個、App.ask 共用輸入元件、中文對照、這句怎麼說更好
 - **第三階段**：Think Well 換位思考 2 個、Global Share 文化大使 1 套（中英介紹卡、事實限制），與 Good Talk 共用對話引擎
+- **第四階段**：Good Mission 每日英文微善任務 10 個（Learn → Practice → Act → Reflect、連續天數與紀錄）
 
 ## 本機試用
 
@@ -18,6 +19,7 @@ FAKE_AI=1 node dev/server.mjs                    # 測試用假 AI（不連網�
 node dev/e2e.mjs                                 # 說好話瀏覽器實測（需要 playwright）
 node dev/e2e-goodtalk.mjs                        # Good Talk 瀏覽器實測（AI 路徑＋示範模式）
 node dev/e2e-phase3.mjs                          # Think Well、Global Share 瀏覽器實測
+node dev/e2e-mission.mjs                         # 微善任務瀏覽器實測
 ```
 
 麥克風需要 https 或 localhost。直接雙擊 index.html 也能開，但只會用示範內容。
@@ -32,13 +34,16 @@ node dev/e2e-phase3.mjs                          # Think Well、Global Share 瀏
 | `js/core/ask.js` | 新增：`App.ask` 共用的麥克風＋打字、跟讀、示範提示與「再送一次」 |
 | `js/modules/goodtalk.js` | 新增：Good Talk 四給情境對話（對話、中文對照開關、提示、分析、Try Again、示範模式） |
 | `data/goodtalk/scenarios.js` | 新增：7 個情境（四給 4、換位思考 2、文化大使 1）的畫面文字、中文對照、介紹卡與示範內容（角色設定在 `worker/src/scenarios.js`） |
+| `js/modules/mission.js` | 新增：Good Mission 每日微善任務（今日任務、跟讀、連到對話情境、反思、AI 看英文、紀錄與連續天數） |
+| `data/mission/tasks.js` | 新增：10 個微善任務 |
+| `js/modules/soon.js` | 修改：測驗不再佔底部分頁（空間給「微善」） |
 | `js/modules/saybetter.js` | 新增：Say It Better 模組。語音與跟讀評分直接用 `App.speech.listen/parse/grade`，和口說模組相同 |
 | `data/saybetter/contexts.js` | 新增：6 個情境、範例句、離線示範結果，以及 12 個重點字的字典條目（字典已有的字不覆蓋） |
 | `css/app.css` | 末端新增「三好四給徽章」「Say It Better」「Good Talk」區塊，全部用既有的 tokens |
 | `index.html` | 加入上述檔案，設定 `EP_AI_ENDPOINT`，標題改為 Good English, Good Life |
 | `dev/` | 本機伺服器與瀏覽器實測，不需部署 |
 
-原有的口說、閱讀、生字本都沒有改動。
+原有的口說、閱讀、生字本都沒有改動；soon.js 只拿掉測驗的分頁。
 
 ## 上傳到 GitHub Pages
 

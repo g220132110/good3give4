@@ -329,3 +329,12 @@ h2.gt-kind{font-size:1.05rem;margin-top:2px}
 .gt-intro-line{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
 .gt-intro .en{font-size:1rem}
 .gt-intro > .btn{align-self:flex-start}
+
+/* ================= Good Mission 微善任務 ================= */
+.ms-hero h2{font-size:1.35rem}
+.ms-act{border:2px solid var(--accent)}
+.ms-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ms-stats > div{display:flex;flex-direction:column;align-items:flex-start;background:var(--paper);border-radius:12px;padding:10px 14px}
+.ms-stats b{font-family:var(--display);font-size:2rem;line-height:1.1;color:var(--ok);font-variant-numeric:tabular-nums}
+.ms-stats span{font-size:.85rem}
+.ms-done{border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}

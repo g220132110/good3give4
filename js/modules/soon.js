@@ -10,7 +10,8 @@
     dialogue: { title: "情境對話", lines: ["和 AI 扮演的店員、櫃檯人員、海關對話", "依你的程度調整對方說話速度與用字", "對話結束後給文法與用字建議"] },
   };
 
-  App.registerModule({ id: "quiz", title: "測驗", tab: "測驗", icon: App.ui.ICON.quiz, order: 4, soon: true, mount() {} });
+  // 參賽版：底部分頁空間留給「微善」，測驗先不顯示分頁（規劃說明仍在 #/soon）
+  App.registerModule({ id: "quiz", title: "測驗", icon: App.ui.ICON.quiz, order: 4, soon: true, mount() {} });
 
   App.registerModule({
     id: "soon", title: "即將推出", order: 99,
