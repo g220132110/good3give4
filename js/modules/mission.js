@@ -60,6 +60,7 @@
     const micOK = App.ask.micOK();
     $("#msView").innerHTML = `
       <div class="panel ms-hero">
+        ${App.art && App.art.has(t.art || t.practice) ? `<div class="gt-banner">${App.art.scene(t.art || t.practice)}</div>` : ""}
         <div class="section-head" style="align-items:center">
           <div class="label">Good Mission · ${today().slice(5).replace("-", "/")} 今日微善</div>
           <button class="linkbtn" data-act="next">換一個任務</button>

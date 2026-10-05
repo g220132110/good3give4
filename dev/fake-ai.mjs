@@ -23,6 +23,17 @@ globalThis.fetch = async (url, init) => {
       retry: { turn: 0, tip: "加一句他已經做到的事" },
     });
   }
+  if (sys.includes("describing it in English")) {
+    const again = user.includes("Previous attempt");
+    return reply({
+      summary: "你注意到長輩提著重物很辛苦，還主動說要幫忙，非常體貼！", level: "A2",
+      seen: ["長輩在爬樓梯", "她提著很重的袋子"], missed: ["她看起來很累、在流汗"],
+      fixes: [{ from: "She carry", to: "She is carrying", note: "正在進行的動作用 is + V-ing" }],
+      acts: [{ name: "做好事", evidence: "你說「I can help her」，主動提出幫忙。" }], givings: [{ name: "給人方便", evidence: "你想幫她提袋子。" }],
+      better: [{ en: "She looks tired. Can I carry your bags for you?", zh: "她看起來很累。我可以幫你提袋子嗎？", why: "先觀察感受，再有禮貌地提出幫忙", giving: "給人方便" }],
+      ...(again ? { compare: { improved: true, note: "進步了！這次你還描述了她的感受。" } } : {}),
+    });
+  }
   const retry = sys.includes("TRY AGAIN MODE");
   return reply({
     tone: { label: "溫暖", note: "很棒，語氣溫暖又真誠。" }, fixes: [],

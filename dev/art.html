@@ -1,0 +1,6 @@
+<!doctype html><meta charset="utf-8"><title>插圖預覽</title>
+<style>body{font-family:sans-serif;background:#f2f5f3;margin:16px}main{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+figure{margin:0;background:#fff;border-radius:12px;padding:8px}figcaption{font-size:13px;color:#4a6a70;padding:6px 4px 0}.art{width:100%;display:block;border-radius:10px}</style>
+<main id="g"></main>
+<script>window.App={}</script><script src="../js/core/art.js"></script>
+<script>g.innerHTML=App.art.ids().map(id=>`<figure>${App.art.scene(id)}<figcaption>${id}｜${App.art.label(id)}</figcaption></figure>`).join("")</script>

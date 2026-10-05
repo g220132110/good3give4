@@ -6,6 +6,7 @@
 - **第二階段**：對話引擎（/api/chat、/api/analyze）、Good Talk 四給情境對話 4 個、App.ask 共用輸入元件、中文對照、這句怎麼說更好
 - **第三階段**：Think Well 換位思考 2 個、Global Share 文化大使 1 套（中英介紹卡、事實限制），與 Good Talk 共用對話引擎
 - **第四階段**：Good Mission 每日英文微善任務 10 個（Learn → Practice → Act → Reflect、連續天數與紀錄）
+- **插圖與看圖說好話**：App.art 程式繪製 SVG 插圖 17 張（對話情境、看圖、微善任務）；看圖說好話 6 張圖（/api/describe）
 
 ## 本機試用
 
@@ -20,6 +21,8 @@ node dev/e2e.mjs                                 # 說好話瀏覽器實測（�
 node dev/e2e-goodtalk.mjs                        # Good Talk 瀏覽器實測（AI 路徑＋示範模式）
 node dev/e2e-phase3.mjs                          # Think Well、Global Share 瀏覽器實測
 node dev/e2e-mission.mjs                         # 微善任務瀏覽器實測
+node dev/e2e-picturetalk.mjs                     # 看圖說好話瀏覽器實測
+# 插圖預覽：http://localhost:8787/dev/art.html
 ```
 
 麥克風需要 https 或 localhost。直接雙擊 index.html 也能開，但只會用示範內容。
@@ -28,12 +31,15 @@ node dev/e2e-mission.mjs                         # 微善任務瀏覽器實測
 
 | 檔案 | 說明 |
 |---|---|
-| `worker/` | 後端代理（Cloudflare Workers）：/api/rewrite、Claude／Gemini 轉接、JSON 驗證、示範模式、備用模型、來源限制、用量上限、18 項測試 |
+| `worker/` | 後端代理（Cloudflare Workers）：/api/rewrite、Claude／Gemini 轉接、JSON 驗證、示範模式、備用模型、來源限制、用量上限、19 項測試 |
 | `js/core/ai.js` | 新增：`App.ai.call(任務, 輸入)`，負責逾時、降級、裝置用量 |
 | `js/core/virtue.js` | 新增：`App.virtue.badge()`、`log()`、`stats()`，用於三好四給徽章與 Passport |
 | `js/core/ask.js` | 新增：`App.ask` 共用的麥克風＋打字、跟讀、示範提示與「再送一次」 |
 | `js/modules/goodtalk.js` | 新增：Good Talk 四給情境對話（對話、中文對照開關、提示、分析、Try Again、示範模式） |
 | `data/goodtalk/scenarios.js` | 新增：7 個情境（四給 4、換位思考 2、文化大使 1）的畫面文字、中文對照、介紹卡與示範內容（角色設定在 `worker/src/scenarios.js`） |
+| `js/core/art.js` | 新增：`App.art.scene(id)` 程式繪製的 SVG 插圖；之後可在 `App.art.images` 換成圖片檔 |
+| `js/modules/picturetalk.js` | 新增：看圖說好話（選圖、提示字、描述、AI 回饋、示範說法、再說一次） |
+| `data/picturetalk/pictures.js` | 新增：6 張圖的提示字與示範說法（圖片說明在 `worker/src/pictures.js`） |
 | `js/modules/mission.js` | 新增：Good Mission 每日微善任務（今日任務、跟讀、連到對話情境、反思、AI 看英文、紀錄與連續天數） |
 | `data/mission/tasks.js` | 新增：10 個微善任務 |
 | `js/modules/soon.js` | 修改：測驗不再佔底部分頁（空間給「微善」） |
@@ -70,3 +76,13 @@ node dev/e2e-mission.mjs                         # 微善任務瀏覽器實測
 - **AI 不會讓畫面壞掉**：AI 回傳格式錯誤時重試一次，再失敗就改用示範結果；連不到後端時，前端改用內容包。兩種情況都會標示「示範模式」。
 - **隱私**：只送文字，不送錄音；後端不儲存內容，只記次數。
 - **注意**：`App.registerModule` 排序時，`order: 0` 會被當成 99，所以模組要用 0.5。
+
+## 換成 AI 產生的圖片
+
+在 `index.html` 載入 art.js 之後加一行，例如：
+
+```html
+<script>App.art.images = { "pt-stairs": "images/pt-stairs.webp", "lost-tourist": "images/lost-tourist.webp" };</script>
+```
+
+有登記的場景會改顯示圖片，沒登記的仍用 SVG。場景 id 可在 `dev/art.html` 查看。

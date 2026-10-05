@@ -1,11 +1,12 @@
 // Good English, Good Life — 後端代理（Cloudflare Workers）
 //
 // 前端只送「任務名稱＋使用者文字」，提示詞、金鑰、用量上限都在這裡。
-// 路由：POST /api/rewrite  /api/chat  /api/analyze   GET /api/health
+// 路由：POST /api/rewrite  /api/chat  /api/analyze  /api/describe   GET /api/health
 
 import { LEVELS } from "./rubric.js";
-import { REWRITE_CONTEXTS, rewriteSystem, retrySystem, rewriteUser, chatSystem, analyzeSystem, transcript } from "./prompts.js";
-import { parseJSON, cleanRewrite, cleanChat, cleanAnalyze } from "./schema.js";
+import { REWRITE_CONTEXTS, rewriteSystem, retrySystem, rewriteUser, chatSystem, analyzeSystem, transcript, describeSystem } from "./prompts.js";
+import { parseJSON, cleanRewrite, cleanChat, cleanAnalyze, cleanDescribe } from "./schema.js";
+import { PICTURES } from "./pictures.js";
 import { SCENARIOS } from "./scenarios.js";
 import { pickProvider } from "./providers.js";
 import { mockRewrite } from "./mock.js";
@@ -187,7 +188,35 @@ async function handleAnalyze(body, env) {
   }
 }
 
-const TASKS = { rewrite: handleRewrite, chat: handleChat, analyze: handleAnalyze };
+// ---------- 任務：describe（看圖說好話） ----------
+
+async function handleDescribe(body, env) {
+  if (!Object.hasOwn(PICTURES, body.picture || "")) return { status: 400, error: "picture", message: "找不到這張圖。" };
+  const text = typeof body.text === "string" ? body.text.trim() : "";
+  const previous = typeof body.previous === "string" ? body.previous.trim() : "";
+  if (!text) return { status: 400, error: "empty", message: "請先用英文說說看圖裡發生什麼事。" };
+  if (text.length > MAX_TEXT * 2 || previous.length > MAX_TEXT * 2)
+    return { status: 400, error: "too_long", message: `一次最多 ${MAX_TEXT * 2} 個字元。` };
+  const level = LEVELS.includes(body.level) ? body.level : "B1";
+  const provider = pickProvider(env);
+  if (!provider) return busy();
+  const retry = Boolean(previous);
+  try {
+    const data = await runModel(
+      provider,
+      env,
+      describeSystem(PICTURES[body.picture], level, retry),
+      `Learner's description: """${text}"""${retry ? `\nPrevious attempt: """${previous}"""` : ""}`,
+      (raw) => cleanDescribe(raw, { retry }),
+    );
+    return { data, demo: false };
+  } catch (err) {
+    console.error("describe failed:", err.message);
+    return busy(err);
+  }
+}
+
+const TASKS = { rewrite: handleRewrite, chat: handleChat, analyze: handleAnalyze, describe: handleDescribe };
 
 // ---------- 入口 ----------
 

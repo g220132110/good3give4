@@ -2,12 +2,13 @@
  * 每個任務：Learn（學兩句）→ Practice（跟讀，或連到對話情境）→ Act（真實生活做到）→ Reflect（反思）
  * tags：對應的三好四給（完成時記進 Passport）
  * practice：可連到的對話情境 id（js/modules/goodtalk.js），沒有就省略
+ * art：插圖場景 id（js/core/art.js）；沒寫就用 practice 情境的插圖
  * 內容為自行撰寫、人工審核。
  */
 App.registerContent("mission", {
   tasks: [
     {
-      id: "thank-driver", tags: ["說好話", "給人歡喜"],
+      id: "thank-driver", art: "m-bus", tags: ["說好話", "給人歡喜"],
       zh: "下車時，真誠地向司機道謝", en: "Thank the driver",
       why: "一句真心的謝謝，可能是司機今天聽到最溫暖的話。",
       learn: [
@@ -37,7 +38,7 @@ App.registerContent("mission", {
       reflect: "Today I told my friend she did a great job.",
     },
     {
-      id: "hold-door", tags: ["做好事", "給人方便"],
+      id: "hold-door", art: "m-door", tags: ["做好事", "給人方便"],
       zh: "幫後面的人扶門，或讓座給需要的人", en: "Hold the door or offer your seat",
       why: "小小的動作，讓別人的一天輕鬆一點。",
       learn: [
@@ -87,7 +88,7 @@ App.registerContent("mission", {
       reflect: "Today I told my friend about the Three Acts of Goodness.",
     },
     {
-      id: "pick-up-trash", tags: ["做好事"],
+      id: "pick-up-trash", art: "m-trash", tags: ["做好事"],
       zh: "隨手撿起地上的垃圾", en: "Pick up litter",
       why: "環境乾淨，每個經過的人都會舒服一點。",
       learn: [
@@ -97,7 +98,7 @@ App.registerContent("mission", {
       reflect: "Today I picked up some trash in the park.",
     },
     {
-      id: "thank-family", tags: ["說好話", "給人歡喜"],
+      id: "thank-family", art: "m-dinner", tags: ["說好話", "給人歡喜"],
       zh: "對家人說一句謝謝", en: "Thank your family",
       why: "最親近的人，最常被我們忘記道謝。",
       learn: [

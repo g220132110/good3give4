@@ -338,3 +338,23 @@ h2.gt-kind{font-size:1.05rem;margin-top:2px}
 .ms-stats b{font-family:var(--display);font-size:2rem;line-height:1.1;color:var(--ok);font-variant-numeric:tabular-nums}
 .ms-stats span{font-size:.85rem}
 .ms-done{border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}
+
+/* ================= 插圖（App.art）與看圖說好話 ================= */
+.art{display:block;width:100%;height:auto;border-radius:12px}
+.gt-banner{margin:-4px -4px 2px}
+.gt-thumb{width:84px;flex:none}
+.gt-thumb .art{border-radius:8px}
+.gt-scene{grid-template-columns:84px 1fr auto}
+.pt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.pt-card{display:flex;flex-direction:column;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px;gap:8px}
+.pt-card:hover{border-color:var(--ink-soft)}
+.pt-card .art{border-radius:10px}
+.pt-card-body{display:flex;flex-direction:column;gap:2px;padding:0 4px 4px}
+.pt-card-body .badge{align-self:flex-start;margin-top:4px}
+.pt-figure{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px}
+.pt-small{max-width:260px}
+.pt-q{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
+.pt-q .en{font-family:var(--display);font-weight:500}
+.pt-words{display:flex;flex-wrap:wrap;gap:6px}
+.pt-li{padding:4px 0}
+.pt-li.ok{color:var(--ok)}

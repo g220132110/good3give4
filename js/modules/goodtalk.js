@@ -65,7 +65,7 @@
           <div><div class="label">${esc(k.label)}</div><h2 class="gt-kind">${esc(k.title)}</h2></div>
           ${list.map((s, i) => `
             <button class="unit gt-scene" data-sid="${s.id}">
-              <span class="no">${String(i + 1).padStart(2, "0")}</span>
+              ${App.art && App.art.has(s.id) ? `<span class="gt-thumb">${App.art.scene(s.id)}</span>` : `<span class="no">${String(i + 1).padStart(2, "0")}</span>`}
               <span><h3>${esc(s.zh)}</h3><span class="meta">${esc(s.en)}</span><span class="gt-give">${App.virtue.badge(s.giving)}</span></span>
               <span class="badge ${done[s.id] ? "done" : ""}">${done[s.id] ? `完成 ${done[s.id]} 次` : "未開始"}</span>
             </button>`).join("")}
@@ -159,6 +159,7 @@
         </span>
       </div>
       <div class="panel gt-task">
+        ${App.art && App.art.has(s.id) ? `<div class="gt-banner">${App.art.scene(s.id)}</div>` : ""}
         <div class="label">你的任務</div>
         <div><b>${esc(s.task)}</b> ${App.virtue.badge(s.giving)}</div>
         <div class="muted" style="font-size:.9rem">${esc(s.who)}</div>

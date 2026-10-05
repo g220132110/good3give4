@@ -264,3 +264,26 @@ test("Gemini：逾時視為忙碌並改用備用模型", async () => {
     globalThis.fetch = realFetch;
   }
 });
+
+test("describe：圖片檢查、說明送給 AI、清理輸出", async () => {
+  assert.equal((await call("/api/describe", { picture: "nope", text: "hi" })).status, 400);
+  assert.equal((await call("/api/describe", { picture: "pt-stairs", text: " " })).status, 400);
+  assert.equal((await call("/api/describe", { picture: "pt-stairs", text: "An old woman." })).status, 503); // 沒金鑰 → busy
+  const realFetch = globalThis.fetch;
+  let sys = "";
+  globalThis.fetch = async (url, init) => {
+    sys = JSON.parse(init.body).systemInstruction.parts[0].text;
+    return gem(JSON.stringify({ summary: "很好", level: "A2", seen: ["長輩爬樓梯"], missed: ["她在流汗", "x", "y", "z"], fixes: [],
+      acts: [{ name: "做好事", evidence: "你說 I can help" }], givings: [], better: [{ en: "Can I carry your bags?", zh: "我可以幫你提袋子嗎？", why: "w", giving: "給人方便" }],
+      compare: { improved: true, note: "進步了" } }))();
+  };
+  try {
+    const r = await (await call("/api/describe", { picture: "pt-stairs", text: "An old woman carry bags. I can help.", previous: "Old woman." }, GEM)).json();
+    assert.match(sys, /elderly woman/);
+    assert.match(sys, /compare/);
+    assert.equal(r.data.missed.length, 3);
+    assert.equal(r.data.compare.improved, true);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

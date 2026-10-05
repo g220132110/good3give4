@@ -84,3 +84,26 @@ export function cleanAnalyze(raw, userTurns) {
     retry: { turn, tip: str(raw.retry?.tip, 120) },
   };
 }
+
+export function cleanDescribe(raw, { retry = false } = {}) {
+  if (!raw || typeof raw !== "object") throw new Error("not an object");
+  const summary = str(raw.summary, 300);
+  if (!summary) throw new Error("missing summary");
+  const list = (v, n) => arr(v, n).map((x) => str(x, 60)).filter(Boolean);
+  const out = {
+    summary,
+    level: /^(A1|A2|B1|B2|C1|C2)$/.test(raw.level) ? raw.level : "",
+    seen: list(raw.seen, 4),
+    missed: list(raw.missed, 3),
+    fixes: arr(raw.fixes, 3)
+      .map((f) => ({ from: str(f?.from, 80), to: str(f?.to, 80), note: str(f?.note, 120) }))
+      .filter((f) => f.from && f.to),
+    acts: named(raw.acts, ACTS),
+    givings: named(raw.givings, GIVINGS),
+    better: arr(raw.better, 2)
+      .map((b) => ({ en: str(b?.en, 200), zh: str(b?.zh, 120), why: str(b?.why, 120), giving: GIVINGS.includes(b?.giving) ? b.giving : "" }))
+      .filter((b) => b.en),
+  };
+  if (retry) out.compare = { improved: raw.compare?.improved === true, note: str(raw.compare?.note, 240) };
+  return out;
+}
