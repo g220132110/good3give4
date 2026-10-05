@@ -273,7 +273,7 @@ test("describe：圖片檢查、說明送給 AI、清理輸出", async () => {
   let sys = "";
   globalThis.fetch = async (url, init) => {
     sys = JSON.parse(init.body).systemInstruction.parts[0].text;
-    return gem(JSON.stringify({ summary: "很好", level: "A2", seen: ["長輩爬樓梯"], missed: ["她在流汗", "x", "y", "z"], fixes: [],
+    return gem(JSON.stringify({ summary: "很好", level: "A2", saw: ["長輩爬樓梯"], understood: ["她很累"], notice: ["她在流汗", "x", "y", "z"], fixes: [],
       acts: [{ name: "做好事", evidence: "你說 I can help" }], givings: [], better: [{ en: "Can I carry your bags?", zh: "我可以幫你提袋子嗎？", why: "w", giving: "給人方便" }],
       compare: { improved: true, note: "進步了" } }))();
   };
@@ -281,8 +281,33 @@ test("describe：圖片檢查、說明送給 AI、清理輸出", async () => {
     const r = await (await call("/api/describe", { picture: "pt-stairs", text: "An old woman carry bags. I can help.", previous: "Old woman." }, GEM)).json();
     assert.match(sys, /elderly woman/);
     assert.match(sys, /compare/);
-    assert.equal(r.data.missed.length, 3);
+    assert.equal(r.data.notice.length, 3);
+    assert.deepEqual(r.data.understood, ["她很累"]);
+    assert.match(sys, /CEFR A2/); // 沒送 level 時用圖的建議程度
+    assert.equal(r.data.story, undefined);
     assert.equal(r.data.compare.improved, true);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("describe：三格故事與 B2 推想圖", async () => {
+  const realFetch = globalThis.fetch;
+  let sys = "";
+  globalThis.fetch = async (url, init) => {
+    sys = JSON.parse(init.body).systemInstruction.parts[0].text;
+    return gem(JSON.stringify({ summary: "很好", level: "A2", saw: ["a"], understood: [], notice: [], fixes: [], acts: [], givings: [], better: [],
+      story: { order: "順序對", tense: "時態一致", used: ["First", "Then", "<b>x</b>"], try: ["After that", "Finally", "Next", "Later"] } }))();
+  };
+  try {
+    const r = await (await call("/api/describe", { picture: "story-rain", text: "First it rained. Then she shared her umbrella." }, GEM)).json();
+    assert.match(sys, /Panel 3/);
+    assert.match(sys, /"story"/);
+    assert.deepEqual(r.data.story.used, ["First", "Then"]);
+    assert.equal(r.data.story.try.length, 3);
+    await call("/api/describe", { picture: "pt-cut-line", text: "A man cut the line." }, GEM);
+    assert.match(sys, /thinking picture/);
+    assert.match(sys, /CEFR B2/);
   } finally {
     globalThis.fetch = realFetch;
   }

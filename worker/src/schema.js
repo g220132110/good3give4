@@ -85,7 +85,7 @@ export function cleanAnalyze(raw, userTurns) {
   };
 }
 
-export function cleanDescribe(raw, { retry = false } = {}) {
+export function cleanDescribe(raw, { retry = false, story = false } = {}) {
   if (!raw || typeof raw !== "object") throw new Error("not an object");
   const summary = str(raw.summary, 300);
   if (!summary) throw new Error("missing summary");
@@ -93,8 +93,9 @@ export function cleanDescribe(raw, { retry = false } = {}) {
   const out = {
     summary,
     level: /^(A1|A2|B1|B2|C1|C2)$/.test(raw.level) ? raw.level : "",
-    seen: list(raw.seen, 4),
-    missed: list(raw.missed, 3),
+    saw: list(raw.saw ?? raw.seen, 4),
+    understood: list(raw.understood, 3),
+    notice: list(raw.notice ?? raw.missed, 3),
     fixes: arr(raw.fixes, 3)
       .map((f) => ({ from: str(f?.from, 80), to: str(f?.to, 80), note: str(f?.note, 120) }))
       .filter((f) => f.from && f.to),
@@ -104,6 +105,10 @@ export function cleanDescribe(raw, { retry = false } = {}) {
       .map((b) => ({ en: str(b?.en, 200), zh: str(b?.zh, 120), why: str(b?.why, 120), giving: GIVINGS.includes(b?.giving) ? b.giving : "" }))
       .filter((b) => b.en),
   };
+  if (story) {
+    const words = (v) => arr(v, 4).map((x) => str(x, 24)).filter((x) => /^[A-Za-z][A-Za-z ,'-]*$/.test(x));
+    out.story = { order: str(raw.story?.order, 160), tense: str(raw.story?.tense, 160), used: words(raw.story?.used), try: words(raw.story?.try).slice(0, 3) };
+  }
   if (retry) out.compare = { improved: raw.compare?.improved === true, note: str(raw.compare?.note, 240) };
   return out;
 }

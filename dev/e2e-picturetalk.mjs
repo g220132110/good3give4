@@ -34,12 +34,30 @@ await say(page, "An old woman carry two bags. I can help her.");
 await page.waitForSelector(".pt-li.ok");
 const seen = await page.locator(".pt-li.ok").count();
 const gave = await page.$$eval(".sb-good .gv-badge", (b) => b.map((x) => x.firstChild.textContent));
-const model = await page.locator("text=示範說法").count();
+const layersN = await page.locator(".pt-layer").count();
+const modelHidden = !(await page.locator(".pt-model").evaluate((d) => d.open));
 await page.screenshot({ path: `${OUT}/pt-3-result.png`, fullPage: true });
 await page.click('[data-act="again"]');
 await say(page, "She looks tired. Can I carry your bags?");
 await page.waitForSelector(".sb-tone .sb-tag");
 const compare = await page.textContent(".sb-tone .sb-tag");
+
+// 篩選與三格故事
+await page.click('[data-act="list"]');
+await page.click('[data-f="mode"] [data-id="story"]');
+const storyCards = await page.locator(".pt-card").count();
+await page.click('[data-id="story-stairs"]');
+const panels = await page.locator(".pt-panel .art").count();
+await page.screenshot({ path: `${OUT}/pt-4-story.png`, fullPage: true });
+await say(page, "First an old woman climb the stairs. Then a boy helped her. She say thank you.");
+await page.waitForSelector(".pt-conn");
+const conn = await page.$$eval(".pt-conn", (b) => b.map((x) => x.textContent));
+await page.screenshot({ path: `${OUT}/pt-5-story-result.png`, fullPage: true });
+await page.click('[data-act="list"]');
+await page.click('[data-f="mode"] [data-id="all"]');
+await page.click('[data-f="level"] [data-id="B2"]');
+const b2 = await page.$$eval(".pt-card", (c) => c.map((x) => x.dataset.id));
+await page.click('[data-f="level"] [data-id="all"]');
 await page.close();
 
 // 示範模式：AI 太忙
@@ -50,7 +68,7 @@ await page.waitForSelector(".pt-card");
 await page.click('[data-id="pt-rain"]');
 await say(page, "A man has no umbrella.");
 await page.waitForSelector('.sb-notice [data-act="resend"]', { timeout: 20000 });
-const demoModel = await page.locator("text=示範說法").count();
+const demoModel = await page.locator(".pt-model").evaluate((d) => d.open);
 
 // 插圖出現在對話與微善
 await page.goto("http://localhost:8787/#/goodtalk");
@@ -59,5 +77,5 @@ const thumbs = await page.locator(".gt-thumb .art").count();
 await page.goto("http://localhost:8787/#/mission");
 await page.waitForSelector(".ms-hero .gt-banner .art");
 
-console.log(JSON.stringify({ tabs, cards, words, seen, gave, model, compare, demoModel, thumbs, errors }, null, 2));
+console.log(JSON.stringify({ tabs, cards, words, seen, layersN, modelHidden, gave, compare, storyCards, panels, conn, b2, demoModel, thumbs, errors }, null, 2));
 await browser.close();

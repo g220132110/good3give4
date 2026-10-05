@@ -23,11 +23,23 @@ globalThis.fetch = async (url, init) => {
       retry: { turn: 0, tip: "加一句他已經做到的事" },
     });
   }
+  if (sys.includes("telling it in English")) {
+    const again = user.includes("Previous attempt");
+    return reply({
+      summary: "你把三格故事依序說完，還說出長輩的感受，很棒！", level: "A2",
+      saw: ["長輩提著兩袋東西爬樓梯", "學生幫忙提袋子"], understood: ["長輩很累，需要幫忙"], notice: ["最後長輩笑著道謝"],
+      fixes: [{ from: "She say thank you", to: "She said thank you", note: "說故事時用過去式，前後一致" }],
+      acts: [{ name: "做好事", evidence: "你說「He helped her carry the bags」。" }], givings: [{ name: "給人方便", evidence: "學生幫長輩提袋子。" }],
+      better: [{ en: "First, an old woman was climbing the stairs. Then a student helped her. Finally, she said, \"Thank you!\"", zh: "首先…接著…最後…", why: "用連接詞讓故事更清楚", giving: "給人方便" }],
+      story: { order: "三格的順序都對。", tense: "大部分用過去式，最後一句改成過去式會更一致。", used: ["First", "Then"], try: ["After that", "Finally"] },
+      ...(again ? { compare: { improved: true, note: "進步了！這次你用了 Finally 收尾。" } } : {}),
+    });
+  }
   if (sys.includes("describing it in English")) {
     const again = user.includes("Previous attempt");
     return reply({
       summary: "你注意到長輩提著重物很辛苦，還主動說要幫忙，非常體貼！", level: "A2",
-      seen: ["長輩在爬樓梯", "她提著很重的袋子"], missed: ["她看起來很累、在流汗"],
+      saw: ["長輩在爬樓梯", "她提著很重的袋子"], understood: ["她需要有人幫忙"], notice: ["她看起來很累、在流汗"],
       fixes: [{ from: "She carry", to: "She is carrying", note: "正在進行的動作用 is + V-ing" }],
       acts: [{ name: "做好事", evidence: "你說「I can help her」，主動提出幫忙。" }], givings: [{ name: "給人方便", evidence: "你想幫她提袋子。" }],
       better: [{ en: "She looks tired. Can I carry your bags for you?", zh: "她看起來很累。我可以幫你提袋子嗎？", why: "先觀察感受，再有禮貌地提出幫忙", giving: "給人方便" }],

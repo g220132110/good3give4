@@ -197,7 +197,9 @@ async function handleDescribe(body, env) {
   if (!text) return { status: 400, error: "empty", message: "請先用英文說說看圖裡發生什麼事。" };
   if (text.length > MAX_TEXT * 2 || previous.length > MAX_TEXT * 2)
     return { status: 400, error: "too_long", message: `一次最多 ${MAX_TEXT * 2} 個字元。` };
-  const level = LEVELS.includes(body.level) ? body.level : "B1";
+  const picture = PICTURES[body.picture];
+  const level = LEVELS.includes(body.level) ? body.level : picture.level || "B1";
+  const story = Array.isArray(picture.panels);
   const provider = pickProvider(env);
   if (!provider) return busy();
   const retry = Boolean(previous);
@@ -205,9 +207,9 @@ async function handleDescribe(body, env) {
     const data = await runModel(
       provider,
       env,
-      describeSystem(PICTURES[body.picture], level, retry),
-      `Learner's description: """${text}"""${retry ? `\nPrevious attempt: """${previous}"""` : ""}`,
-      (raw) => cleanDescribe(raw, { retry }),
+      describeSystem(picture, level, retry),
+      `Learner's ${story ? "story" : "description"}: """${text}"""${retry ? `\nPrevious attempt: """${previous}"""` : ""}`,
+      (raw) => cleanDescribe(raw, { retry, story }),
     );
     return { data, demo: false };
   } catch (err) {
