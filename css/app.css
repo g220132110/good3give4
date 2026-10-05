@@ -307,3 +307,8 @@ button.w{border:none;font-family:var(--display)}
 .gt-nozh .gt-zh{display:none}
 .gt-zhbtn{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:3px 12px;font-size:.85rem;font-weight:700;color:var(--ink-soft)}
 .gt-zhbtn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.gt-tools{display:flex;flex-direction:column;gap:6px}
+.gt-zh1{font-size:.8rem}
+.gt-zh1[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.gt-nozh .gt-msg.gt-show .gt-zh{display:block}
+.gt-log:not(.gt-nozh) .gt-zh1{display:none}

@@ -36,6 +36,11 @@ const zhShown = await page.locator(".gt-zh").first().isVisible();
 const zhText = await page.locator(".gt-ai .gt-zh").nth(1).textContent();
 await page.click('[data-act="zh"]');
 const zhHidden = !(await page.locator(".gt-zh").first().isVisible());
+// 全部隱藏時，按某一句的「中」只顯示那一句
+await page.click('.gt-ai [data-zh1="2"]');
+const oneShown = await page.locator(".gt-ai .gt-zh").nth(1).isVisible();
+const othersHidden = !(await page.locator(".gt-ai .gt-zh").nth(0).isVisible());
+await page.screenshot({ path: `${OUT}/gt-zh-one.png` });
 await page.click('[data-act="zh"]');
 await say(page, "Let's study with together this weekend.");
 await page.click('#gtInput [data-act="hint"]');
@@ -84,5 +89,5 @@ await page.screenshot({ path: `${OUT}/gt-5-demo-result.png`, fullPage: true });
 await page.click('.tab[data-id="saybetter"]');
 const sbOK = await page.waitForSelector("#sbCtx .chip", { timeout: 5000 }).then(() => true, () => false);
 
-console.log(JSON.stringify({ zhShown, zhText, zhHidden, stallShown, scenes, hint, bubbles, gave, aiNotice, compare, doneBadge, demoNotice, demoReply, endShown, demoSummary: demoSummary.slice(0, 20), sbOK, errors }, null, 2));
+console.log(JSON.stringify({ zhShown, zhText, zhHidden, oneShown, othersHidden, stallShown, scenes, hint, bubbles, gave, aiNotice, compare, doneBadge, demoNotice, demoReply, endShown, demoSummary: demoSummary.slice(0, 20), sbOK, errors }, null, 2));
 await browser.close();

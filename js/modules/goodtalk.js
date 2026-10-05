@@ -8,7 +8,8 @@
  *
  * 示範模式：沒有設定 AI 時，整段改用內容包的預寫對話；
  * AI 太忙時（任何一輪），讓使用者選「再送一次」或「用示範內容繼續」。
- * 中文對照：AI 每句回話附中文，可用「中文」開關顯示／隱藏（初級預設顯示）。
+ * 中文對照：AI 每句回話附中文。上方「中文」開關控制全部（初級預設顯示）；
+ * 每句旁的「中」按鈕只顯示那一句的翻譯。
  * ========================================================================= */
 (function () {
   const { $, esc } = App;
@@ -72,7 +73,10 @@
     if (role === "ai") return `
       <div class="gt-msg gt-ai" data-from="Good Talk">
         <div class="gt-text"><div class="en">${App.ui.tokens(text)}</div>${zhLine(zh)}</div>
-        <button class="mini" data-say="${i}" aria-label="播放">${ICON.play}</button>
+        <span class="gt-tools">
+          <button class="mini" data-say="${i}" aria-label="播放">${ICON.play}</button>
+          ${zh ? `<button class="mini gt-zh1" data-zh1="${i}" aria-label="顯示這句的中文">中</button>` : ""}
+        </span>
       </div>`;
     return `<div class="gt-msg gt-me"><div class="gt-text">${esc(text)}</div></div>`;
   }
@@ -129,6 +133,7 @@
   function onChatClick(e) {
     const t = e.target.closest("button"); if (!t) return;
     if (t.dataset.say) return App.speech.speak(lines()[+t.dataset.say].text, 0.9);
+    if (t.dataset.zh1) { const m = t.closest(".gt-msg"); m.classList.toggle("gt-show"); t.setAttribute("aria-pressed", m.classList.contains("gt-show")); return; }
     const act = t.dataset.act;
     if (act === "leave") { App.speech.stop(); renderList(); }
     else if (act === "zh") {
