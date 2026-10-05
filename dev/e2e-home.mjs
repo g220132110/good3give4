@@ -44,7 +44,7 @@ await page.screenshot({ path: `${OUT}/home-4-passport.png`, fullPage: true });
 // PWA
 const manifest = await page.evaluate(async () => (await fetch("manifest.webmanifest")).json());
 const sw = await page.evaluate(async () => { const r = await navigator.serviceWorker.ready; return Boolean(r.active); });
-const cached = await page.evaluate(async () => (await (await caches.open("ge-v1")).keys()).length);
+const cached = await page.evaluate(async () => (await (await caches.open("ge-v2")).keys()).length);
 
 console.log(JSON.stringify({ tabs, pillars, visitorLines, enTitle, activeOnMission, stampsOn, manifest: manifest.short_name, sw, cached, errors }, null, 2));
 await browser.close();

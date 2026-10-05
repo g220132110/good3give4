@@ -458,3 +458,4 @@ h2.gt-kind{font-size:1.05rem;margin-top:2px}
 @keyframes toastIn{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
 @keyframes toastOut{to{transform:translate(-50%,20px);opacity:0}}
 @media (prefers-reduced-motion:reduce){.gv-toast,.gv-toast.out,.gv-stamp,.pp-stamp.on .pp-seal,.sb-good .gv-badge{animation:none}}
+.pt-reflect{width:100%;font:inherit;color:inherit;background:var(--paper);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;resize:vertical}

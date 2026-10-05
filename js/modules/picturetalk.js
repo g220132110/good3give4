@@ -35,7 +35,7 @@
     $("#ptView").innerHTML = `
       <div class="panel">
         <div class="label">Picture Talk · 看圖說好話</div>
-        <h2>看見需要幫忙的人，用英文說出來</h2>
+        <h2>看圖、想一想、把善意說出來</h2>
         <p class="muted" style="margin:0">選一張圖，用英文說說：你看到什麼、圖裡的人感覺怎樣、你可以怎麼幫忙。三格故事練習把事情依序說完。AI 會給你回饋。</p>
         <div class="chips" data-f="mode">${App.ui.chips(MODES, (id) => id === f.mode)}</div>
         <div class="chips" data-f="level">${App.ui.chips(LEVELS, (id) => id === f.level)}</div>
@@ -160,6 +160,7 @@
       ${r && r.fixes.length ? `<div class="panel"><div class="label">English</div><h2>英文可以更好的地方</h2>
         ${r.fixes.map((f) => `<div class="sumrow"><span><s class="muted">${esc(f.from)}</s> → <b>${esc(f.to)}</b><br><small class="muted">${esc(f.note)}</small></span></div>`).join("")}</div>` : ""}
       ${r && r.better.length ? sentences("Better ways to say it", "從你的句子改寫", r.better.map((b) => ({ en: b.en, zh: `${b.zh}・${b.why}`, giving: b.giving })), "b") : ""}
+      ${reflectPanel(p)}
       <details class="pt-model" ${r ? "" : "open"}>
         <summary>想看完整示範 <small class="muted">Model answer</small></summary>
         ${sentences("Model answer", "示範說法", p.model, "m")}
@@ -175,9 +176,26 @@
       const act = b.dataset.act;
       if (act === "list") renderList();
       else if (act === "again") renderPicture();
+      else if (act === "reflect") {
+        const v = $("#ptReflect").value.trim(); if (!v) return;
+        const all = App.store.get("picturetalk.reflect", {}); all[p.id] = { text: v.slice(0, 300), date: new Date().toISOString().slice(0, 10) };
+        App.store.set("picturetalk.reflect", all);
+        b.textContent = "已存下 ✓"; b.disabled = true;
+      }
       else if (act === "resend") { b.disabled = true; b.textContent = "分析中…"; st.result = null; submit(st.text); }
     };
     window.scrollTo(0, 0);
+  }
+
+  // 從看圖走向實踐：一句真實生活的打算（只存在這台裝置，不呼叫 AI）
+  function reflectPanel(p) {
+    const saved = (App.store.get("picturetalk.reflect", {})[p.id] || {}).text || "";
+    return `<div class="panel">
+      <div class="label">Real life</div><h2>如果真的遇到，你會怎麼做？</h2>
+      <p class="muted" style="margin:0">If this happened in real life, what would you actually do? 用中文或英文寫一句都可以。</p>
+      <textarea id="ptReflect" class="pt-reflect" rows="2" maxlength="300" placeholder="例如：I would ask her, &quot;Can I help you?&quot;">${esc(saved)}</textarea>
+      <button class="btn btn-ghost" data-act="reflect" style="align-self:flex-start">${saved ? "更新" : "存下來"}</button>
+    </div>`;
   }
 
   function sentences(label, title, list, key) {

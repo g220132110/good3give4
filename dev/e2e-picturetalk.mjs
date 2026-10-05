@@ -36,6 +36,9 @@ const seen = await page.locator(".pt-li.ok").count();
 const gave = await page.$$eval(".sb-good .gv-badge", (b) => b.map((x) => x.firstChild.textContent));
 const layersN = await page.locator(".pt-layer").count();
 const modelHidden = !(await page.locator(".pt-model").evaluate((d) => d.open));
+await page.fill("#ptReflect", "I would carry her bags.");
+await page.click('[data-act="reflect"]');
+const reflect = await page.evaluate(() => App.store.get("picturetalk.reflect", {})["pt-stairs"]?.text);
 await page.screenshot({ path: `${OUT}/pt-3-result.png`, fullPage: true });
 await page.click('[data-act="again"]');
 await say(page, "She looks tired. Can I carry your bags?");
@@ -77,5 +80,5 @@ const thumbs = await page.locator(".gt-thumb .art").count();
 await page.goto("http://localhost:8787/#/mission");
 await page.waitForSelector(".ms-hero .gt-banner .art");
 
-console.log(JSON.stringify({ tabs, cards, words, seen, layersN, modelHidden, gave, compare, storyCards, panels, conn, b2, demoModel, thumbs, errors }, null, 2));
+console.log(JSON.stringify({ reflect, tabs, cards, words, seen, layersN, modelHidden, gave, compare, storyCards, panels, conn, b2, demoModel, thumbs, errors }, null, 2));
 await browser.close();

@@ -1,5 +1,6 @@
 /* =========================================================================
- * App.art — 程式繪製的 SVG 插圖（扁平暖色風格，所有場景共用同一組人物與道具）
+ * App.art — 程式繪製的 SVG 插圖（暖色扁平風格 2.0：接地陰影、身體明暗、視線、姿勢前傾、
+ *           場景光線與景深，所有場景共用同一組人物與道具）
  *
  *   App.art.scene("lost-tourist")        → <svg>…</svg> 字串（找不到回傳 ""）
  *   App.art.has("lost-tourist")          → true / false
@@ -18,7 +19,11 @@
   /* ---------- 人物 ----------
    * x：中心、y：腳底；s：比例；mood：happy／sad／worried／neutral／cry
    * arms：down／wave／point／hold／up／hug／reach；sit：坐姿；old：長輩（灰髮、拐杖）
+   * 2.0：lean：上半身前傾角度（正數往右）；gaze：[dx, dy] 眼睛看的方向；shadow:false 不畫接地陰影
    */
+  const mood0 = (o) => o.mood || "neutral";
+  const eye = (x, y) => `<circle cx="${x}" cy="${y}" r="1.8" fill="${C.ink}"/><circle cx="${x + 0.6}" cy="${y - 0.6}" r=".55" fill="#fff"/>`;
+
   function person(o) {
     const s = o.s || 1, x = o.x, y = o.y;
     const skin = C.skin[o.skin || 0], hair = o.old ? C.hair[3] : C.hair[o.hair || 0];
@@ -26,6 +31,10 @@
     const g = [];
     const sit = o.sit;
     const hipY = sit ? -34 : -44, shY = sit ? -70 : -80, headY = sit ? -86 : -96;
+    const facing = o.facing || 0;
+    const lean = o.lean != null ? o.lean : o.old ? (facing || 1) * 6 : mood0(o) === "worried" ? (facing || 0) * 3 : 0;
+    // 接地陰影
+    if (o.shadow !== false) g.push(`<ellipse cx="${sit ? 4 : 0}" cy="0" rx="${sit ? 22 : 17}" ry="3.6" fill="${C.ink}" opacity=".13"/>`);
     // 腿
     if (sit) {
       g.push(`<path d="M-8 ${hipY}h22v8h-6v26h-8v-26h-8z" fill="${pants}"/>`, `<path d="M-2 ${hipY}h20v8h-4v26h-8v-26h-8z" fill="${pants}" opacity=".9"/>`);
@@ -33,8 +42,12 @@
       g.push(`<rect x="-10" y="${hipY}" width="8" height="44" rx="4" fill="${pants}"/>`, `<rect x="2" y="${hipY}" width="8" height="44" rx="4" fill="${pants}"/>`);
       g.push(`<ellipse cx="-6" cy="-1" rx="6" ry="3" fill="${C.ink}"/>`, `<ellipse cx="6" cy="-1" rx="6" ry="3" fill="${C.ink}"/>`);
     }
-    // 身體
+    // 上半身（身體、手臂、頭）整組可前傾
+    g.push(`<g transform="rotate(${lean} 0 ${hipY + 4})">`);
+    // 身體＋右側暗面＋領口
     g.push(`<rect x="-14" y="${shY}" width="28" height="${hipY - shY + 6}" rx="10" fill="${shirt}"/>`);
+    g.push(`<path d="M4 ${shY + 1}h0a10 10 0 0 1 10 10v${hipY - shY - 15}a10 10 0 0 1 -10 10z" fill="${C.ink}" opacity=".12"/>`);
+    g.push(`<path d="M-5 ${shY + 1}q5 5 10 0" stroke="${C.ink}" stroke-width="1.2" fill="none" opacity=".2"/>`);
     // 手臂（左右兩條）
     const arm = (side, kind) => {
       const sx = side * 12, sy = shY + 6;
@@ -50,6 +63,8 @@
     g.push(arm(-1, la), arm(1, ra));
     // 頭
     g.push(`<rect x="-4" y="${headY + 10}" width="8" height="8" fill="${skin}"/>`);
+    g.push(`<rect x="-4" y="${headY + 12}" width="8" height="3" fill="${C.ink}" opacity=".12"/>`);
+    g.push(`<circle cx="${facing === 1 ? -13 : facing === -1 ? 13 : -13.5}" cy="${headY + 2}" r="3" fill="${skin}"/>${facing ? "" : `<circle cx="13.5" cy="${headY + 2}" r="3" fill="${skin}"/>`}`);
     g.push(`<circle cx="0" cy="${headY}" r="14" fill="${skin}"/>`);
     // 頭髮
     const hs = o.hairStyle || "short";
@@ -57,24 +72,28 @@
     else if (hs === "bun") g.push(`<path d="M-14 ${headY - 2}a14 14 0 0 1 28 0z" fill="${hair}"/><circle cx="0" cy="${headY - 15}" r="6" fill="${hair}"/>`);
     else if (hs === "cap") g.push(`<path d="M-14 ${headY - 3}a14 14 0 0 1 28 0z" fill="${o.cap || C.coral}"/><rect x="${o.facing === -1 ? -24 : 4}" y="${headY - 5}" width="20" height="4" rx="2" fill="${o.cap || C.coral}"/>`);
     else g.push(`<path d="M-14 ${headY - 1}a14 14 0 0 1 28 0c-4-4-9-5-14-5s-10 1-14 5z" fill="${hair}"/>`);
+    g.push(`<path d="M-8 ${headY - 9}q6 -5 13 -3" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" opacity="${o.old ? 0 : 0.22}"/>`);
     // 臉
-    const f = o.facing === -1 ? -3 : o.facing === 1 ? 3 : 0, ey = headY + 1, m = headY + 7;
-    const mood = o.mood || "neutral";
+    const f = facing === -1 ? -3 : facing === 1 ? 3 : 0, ey = headY + 1, m = headY + 7;
+    const mood = mood0(o);
+    const [gx, gy] = o.gaze || [facing * 0.8, 0];
     if (mood === "cry") g.push(`<path d="M${f - 7} ${ey}q2 -2 4 0M${f + 3} ${ey}q2 -2 4 0" stroke="${C.ink}" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M${f - 6} ${ey + 3}v6M${f + 6} ${ey + 3}v6" stroke="${C.blue}" stroke-width="2" stroke-linecap="round"/>`);
-    else if (mood === "sad" || mood === "worried") g.push(`<circle cx="${f - 5}" cy="${ey + 1}" r="1.6" fill="${C.ink}"/><circle cx="${f + 5}" cy="${ey + 1}" r="1.6" fill="${C.ink}"/><path d="M${f - 8} ${ey - 4}l4 ${mood === "sad" ? 2 : -1}M${f + 8} ${ey - 4}l-4 ${mood === "sad" ? 2 : -1}" stroke="${C.ink}" stroke-width="1.4" stroke-linecap="round"/>`);
-    else g.push(`<circle cx="${f - 5}" cy="${ey}" r="1.6" fill="${C.ink}"/><circle cx="${f + 5}" cy="${ey}" r="1.6" fill="${C.ink}"/>`);
+    else if (mood === "sad" || mood === "worried") g.push(`${eye(f - 5 + gx, ey + 1 + gy)}${eye(f + 5 + gx, ey + 1 + gy)}<path d="M${f - 8} ${ey - 4}l4 ${mood === "sad" ? 2 : -1}M${f + 8} ${ey - 4}l-4 ${mood === "sad" ? 2 : -1}" stroke="${C.ink}" stroke-width="1.4" stroke-linecap="round"/>`);
+    else if (mood === "happy") g.push(`<path d="M${f - 7 + gx} ${ey + 1}q2 -3 4 0M${f + 3 + gx} ${ey + 1}q2 -3 4 0" stroke="${C.ink}" stroke-width="1.7" fill="none" stroke-linecap="round"/>`);
+    else g.push(eye(f - 5 + gx, ey + gy) + eye(f + 5 + gx, ey + gy));
     const mouth = { happy: `M${f - 5} ${m - 1}q5 5 10 0`, sad: `M${f - 4} ${m + 2}q4 -4 8 0`, cry: `M${f - 4} ${m + 2}q4 -4 8 0`, worried: `M${f - 4} ${m + 1}h8`, neutral: `M${f - 3} ${m}q3 2 6 0` }[mood];
     g.push(`<path d="${mouth}" stroke="${C.ink}" stroke-width="1.6" fill="none" stroke-linecap="round"/>`);
     if (mood === "happy") g.push(`<circle cx="${f - 9}" cy="${m - 2}" r="2.5" fill="${C.coral}" opacity=".35"/><circle cx="${f + 9}" cy="${m - 2}" r="2.5" fill="${C.coral}" opacity=".35"/>`);
     // 背包、拐杖
     if (o.backpack) g.push(`<rect x="${(o.facing || 1) * -18 - 6}" y="${shY + 4}" width="12" height="26" rx="5" fill="${o.backpack}"/>`);
-    if (o.old) g.push(`<path d="M24 ${shY + 30}V0" stroke="${C.wood}" stroke-width="3" stroke-linecap="round"/>`);
+    g.push(`</g>`); // 上半身結束
+    if (o.old) g.push(`<path d="M${(facing || 1) * 24} ${shY + 30}L${(facing || 1) * 26} 0" stroke="${C.wood}" stroke-width="3" stroke-linecap="round"/>`);
     return `<g transform="translate(${x} ${y}) scale(${s})">${g.join("")}</g>`;
   }
 
   /* ---------- 背景 ---------- */
   const W = 320, H = 200;
-  const ground = (y, c) => `<rect x="0" y="${y}" width="${W}" height="${H - y}" fill="${c}"/>`;
+  const ground = (y, c) => `<rect x="0" y="${y}" width="${W}" height="${H - y}" fill="${c}"/><rect x="0" y="${y}" width="${W}" height="6" fill="${C.ink}" opacity=".06"/><rect x="0" y="${y + 6}" width="${W}" height="4" fill="${C.ink}" opacity=".03"/>`;
   const BG = {
     street: () => `<rect width="${W}" height="${H}" fill="${C.sky}"/><rect x="18" y="62" width="58" height="100" rx="4" fill="#c9dde0"/><rect x="230" y="48" width="70" height="114" rx="4" fill="#c4d8db"/>${ground(160, C.floor)}<rect y="158" width="${W}" height="4" fill="${C.gray}"/>`,
     station: () => `<rect width="${W}" height="${H}" fill="${C.sky}"/><rect x="40" y="40" width="240" height="122" rx="6" fill="#d7cbb7"/><rect x="40" y="40" width="240" height="22" rx="6" fill="${C.teal}"/><text x="160" y="56" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" font-family="sans-serif">STATION</text><circle cx="160" cy="84" r="12" fill="#fff" stroke="${C.ink}" stroke-width="2"/><path d="M160 84v-7M160 84l5 3" stroke="${C.ink}" stroke-width="2" stroke-linecap="round"/><rect x="128" y="110" width="64" height="52" rx="4" fill="#a99a82"/>${ground(160, C.floor)}`,
@@ -86,7 +105,7 @@
     rain: () => `<rect width="${W}" height="${H}" fill="#c9d6dc"/><rect x="20" y="56" width="70" height="104" rx="4" fill="#b2c3ca"/><rect x="240" y="44" width="62" height="116" rx="4" fill="#aebfc6"/>${ground(160, "#9fb1b8")}${Array.from({ length: 34 }, (_, i) => `<path d="M${(i * 37) % 320} ${(i * 53) % 150}l-4 10" stroke="#fff" stroke-width="1.5" opacity=".75" stroke-linecap="round"/>`).join("")}`,
     hallway: () => `<rect width="${W}" height="${H}" fill="#eae3d6"/>${[0, 1, 2, 3].map((i) => `<rect x="${16 + i * 76}" y="40" width="60" height="110" rx="3" fill="${i % 2 ? "#9fc1c7" : "#a8c7b7"}"/><circle cx="${66 + i * 76}" cy="96" r="2.5" fill="${C.ink}"/>`).join("")}${ground(152, C.floor)}`,
     cafeteria: () => `<rect width="${W}" height="${H}" fill="${C.wall}"/><rect x="190" y="104" width="120" height="10" rx="3" fill="${C.wood}"/><rect x="20" y="118" width="120" height="10" rx="3" fill="${C.wood}"/>${ground(158, C.floor)}`,
-    stairs: () => `<rect width="${W}" height="${H}" fill="${C.sky2}"/>${[0, 1, 2, 3, 4].map((i) => `<rect x="${140 + i * 36}" y="${160 - (i + 1) * 20}" width="${200 - i * 36}" height="${(i + 1) * 20}" fill="${i % 2 ? "#d9cdb9" : "#e3d8c6"}"/>`).join("")}${ground(160, C.floor)}<path d="M150 120L300 40" stroke="${C.gray}" stroke-width="3"/>`,
+    stairs: () => `<rect width="${W}" height="${H}" fill="${C.sky2}"/>${[0, 1, 2, 3, 4].map((i) => `<rect x="${140 + i * 36}" y="${160 - (i + 1) * 20}" width="${200 - i * 36}" height="${(i + 1) * 20}" fill="${i % 2 ? "#d9cdb9" : "#e3d8c6"}"/><rect x="${140 + i * 36}" y="${160 - (i + 1) * 20}" width="${200 - i * 36}" height="2.5" fill="#fff" opacity=".55"/><rect x="${140 + i * 36}" y="${160 - (i + 1) * 20}" width="5" height="${(i + 1) * 20}" fill="${C.ink}" opacity=".06"/>`).join("")}${ground(160, C.floor)}<path d="M150 120L300 40" stroke="${C.gray}" stroke-width="3"/>`,
     bus: () => `<rect width="${W}" height="${H}" fill="${C.sky}"/>${ground(160, C.floor)}<rect x="30" y="60" width="210" height="88" rx="14" fill="${C.amber}"/><rect x="44" y="72" width="44" height="34" rx="4" fill="#e9f3f5"/><rect x="98" y="72" width="40" height="34" rx="4" fill="#e9f3f5"/><rect x="148" y="72" width="40" height="34" rx="4" fill="#e9f3f5"/><rect x="196" y="72" width="32" height="70" rx="4" fill="#d8e8eb"/><circle cx="70" cy="150" r="12" fill="${C.ink}"/><circle cx="200" cy="150" r="12" fill="${C.ink}"/>`,
     door: () => `<rect width="${W}" height="${H}" fill="${C.wall}"/><rect x="120" y="36" width="84" height="124" rx="4" fill="#cfe0e3" stroke="${C.wood}" stroke-width="6"/><rect x="190" y="96" width="4" height="16" rx="2" fill="${C.ink}"/>${ground(160, C.floor)}`,
     dinner: () => `<rect width="${W}" height="${H}" fill="${C.wall}"/><circle cx="160" cy="28" r="10" fill="#f6d36b"/><path d="M160 0v18" stroke="${C.ink}" stroke-width="2"/>${ground(160, C.floor)}`,
@@ -127,25 +146,29 @@
     easel: (x, y) => `<path d="M${x} ${y + 80}l20 -80 20 80M${x + 20} ${y}v80" stroke="${C.wood}" stroke-width="4"/><rect x="${x + 2}" y="${y + 6}" width="36" height="40" fill="#fff" stroke="${C.gray}"/>`,
     paper: (x, y) => `<rect x="${x}" y="${y}" width="16" height="20" rx="2" fill="#fff" stroke="${C.gray}"/><path d="M${x + 3} ${y + 6}h10M${x + 3} ${y + 10}h10M${x + 3} ${y + 14}h6" stroke="${C.gray}"/>`,
     clap: (x, y) => `<path d="M${x - 8} ${y - 4}l-4 -4M${x + 8} ${y - 4}l4 -4M${x} ${y - 8}v-5" stroke="${C.amber}" stroke-width="2" stroke-linecap="round"/>`,
+    glow: (x, y, r = 50) => `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * 0.9}" fill="url(#artGlow)"/>`, // 2.0：主角背後柔光，引導視線
+    shadow: (x, y, rx = 16) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${rx * 0.22}" fill="${C.ink}" opacity=".12"/>`,
     heart: (x, y) => `<path d="M${x} ${y + 6}l-7 -7a4 4 0 0 1 7 -5a4 4 0 0 1 7 5z" fill="${C.coral}"/>`,
   };
 
-  const wrap = (label, body) => `<svg class="art" viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}" xmlns="http://www.w3.org/2000/svg"><g>${body}</g></svg>`;
+  // 2.0：場景光線（左上亮、下方微暗）與四周暗角，讓畫面有景深；id 在每張圖都相同，定義也相同，可安全重複
+  const DEFS = `<defs><linearGradient id="artLight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="${C.ink}" stop-opacity=".07"/></linearGradient><radialGradient id="artVig" cx=".5" cy=".45" r=".75"><stop offset=".6" stop-color="${C.ink}" stop-opacity="0"/><stop offset="1" stop-color="${C.ink}" stop-opacity=".14"/></radialGradient><radialGradient id="artGlow"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>`;
+  const wrap = (label, body) => `<svg class="art" viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}" xmlns="http://www.w3.org/2000/svg">${DEFS}<g>${body}</g><rect width="${W}" height="${H}" fill="url(#artLight)" pointer-events="none"/><rect width="${W}" height="${H}" fill="url(#artVig)" pointer-events="none"/></svg>`;
 
   /* ---------- 場景 ---------- */
   const SCENES = {
     // Good Talk
-    "exam-fail": ["朋友考試又沒過，難過地坐在書桌前", () => BG.classroom() + P.desk(70, 120) + person({ x: 115, y: 158, sit: true, mood: "sad", shirt: C.blue, arms: "hold" }) + P.paperX(82, 92) + person({ x: 220, y: 158, mood: "worried", shirt: C.amber, hair: 1, hairStyle: "long", skin: 1, arms: ["down", "reach"], facing: -1 }) + P.thought(140, 42, "…")],
-    "lost-tourist": ["外國遊客拿著地圖，在車站前問路", () => BG.station() + person({ x: 110, y: 172, mood: "worried", shirt: C.green, hairStyle: "cap", backpack: C.coral, arms: ["hold", "down"], facing: 1, skin: 0 }) + P.map(84, 122) + person({ x: 210, y: 172, mood: "happy", shirt: C.teal, arms: ["down", "point"], facing: -1, skin: 1, hair: 0 }) + P.bubble(12, 26, "Night market?")],
+    "exam-fail": ["朋友考試又沒過，難過地坐在書桌前", () => BG.classroom() + P.glow(122, 122, 50) + P.desk(70, 120) + person({ x: 115, y: 158, sit: true, mood: "sad", shirt: C.blue, arms: "hold", lean: 7, gaze: [0, 1.6] }) + P.paperX(82, 92) + person({ x: 214, y: 158, mood: "neutral", shirt: C.amber, hair: 1, hairStyle: "long", skin: 1, arms: ["down", "reach"], facing: -1, lean: -6, gaze: [-1.4, 1] }) + P.thought(140, 42, "…")],
+    "lost-tourist": ["外國遊客拿著地圖，在車站前問路", () => BG.station() + P.glow(110, 110, 55) + person({ x: 110, y: 172, mood: "worried", shirt: C.green, hairStyle: "cap", backpack: C.coral, arms: ["hold", "down"], facing: 1, skin: 0, gaze: [1.6, 0] }) + P.map(84, 122) + person({ x: 210, y: 172, mood: "happy", shirt: C.teal, arms: ["down", "point"], facing: -1, skin: 1, hair: 0 }) + P.bubble(12, 26, "Night market?")],
     "future-worry": ["朋友坐在長椅上，為未來擔心", () => BG.park() + P.bench(100, 130) + person({ x: 135, y: 158, sit: true, mood: "worried", shirt: C.purple, arms: ["hold", "chin"], skin: 1 }) + `<rect x="128" y="112" width="20" height="14" rx="2" fill="#fff" stroke="${C.gray}"/>` + person({ x: 190, y: 158, sit: true, mood: "neutral", shirt: C.amber, hairStyle: "long", hair: 2, arms: ["reach", "down"], facing: -1 }) + P.thought(140, 34, "?")],
     "good-news": ["朋友開心地拿著剛考到的駕照", () => BG.street() + P.confetti() + person({ x: 130, y: 172, mood: "happy", shirt: C.coral, hairStyle: "long", hair: 1, arms: ["up", "wave"], skin: 0 }) + P.card(104, 52) + person({ x: 210, y: 172, mood: "happy", shirt: C.teal, arms: ["down", "wave"], facing: -1, skin: 2 })],
     // Think Well
     "teammate-mistake": ["比賽輸了，隊友低著頭，球在地上", () => BG.court() + person({ x: 110, y: 168, mood: "sad", shirt: C.purple, arms: "down", skin: 1 }) + P.ball(150, 160) + person({ x: 210, y: 168, mood: "neutral", shirt: C.teal, hairStyle: "cap", cap: C.ink, arms: ["down", "hold"], facing: -1 }) + P.clipboard(212, 104) + P.thought(110, 32, "…")],
     "no-reply": ["一直看手機，朋友兩天沒回訊息", () => BG.home() + person({ x: 90, y: 160, sit: true, mood: "worried", shirt: C.coral, hairStyle: "long", hair: 0, arms: ["hold", "hold"] }) + P.phone(84, 100) + P.phone(200, 40, true) + P.thought(150, 30, "?")],
     // Global Share
-    "ambassador-three-acts": ["外國旅客好奇地看著「三好」的標語", () => BG.sign() + person({ x: 190, y: 172, mood: "happy", shirt: C.green, hairStyle: "long", hair: 2, backpack: C.amber, arms: ["point", "down"], facing: -1, skin: 0 }) + person({ x: 262, y: 172, mood: "happy", shirt: C.teal, arms: ["down", "wave"], facing: -1, skin: 1 }) + P.bubble(178, 40, "What does it mean?")],
+    "ambassador-three-acts": ["外國旅客好奇地看著「三好」的標語", () => BG.sign() + person({ x: 190, y: 172, mood: "neutral", shirt: C.green, hairStyle: "long", hair: 2, backpack: C.amber, arms: ["point", "down"], facing: -1, skin: 0, gaze: [-1.6, -1] }) + person({ x: 262, y: 172, mood: "happy", shirt: C.teal, arms: ["down", "wave"], facing: -1, skin: 1 }) + P.bubble(178, 40, "What does it mean?")],
     // 看圖說好話
-    "pt-stairs": ["一位長輩提著兩袋重物，吃力地爬樓梯", () => BG.stairs() + person({ x: 196, y: 120, old: true, mood: "worried", shirt: C.purple, hairStyle: "bun", arms: ["hold", "hold"], skin: 0 }) + P.bags(178, 80) + P.sweat(214, 18) + person({ x: 70, y: 168, mood: "neutral", shirt: C.teal, arms: "down", facing: 1, skin: 1 })],
+    "pt-stairs": ["一位長輩提著兩袋重物，吃力地爬樓梯", () => BG.stairs() + P.glow(200, 66, 64) + person({ x: 196, y: 120, old: true, mood: "worried", shirt: C.purple, hairStyle: "bun", arms: ["hold", "hold"], skin: 0, gaze: [0.6, 1.4] }) + P.bags(178, 80) + P.sweat(214, 18) + person({ x: 70, y: 168, mood: "neutral", shirt: C.teal, arms: "down", facing: 1, skin: 1, lean: 2, gaze: [1.8, -1.4] })],
     "pt-lost-child": ["熱鬧的市場裡，一個小孩站著哭", () => BG.market() + person({ x: 150, y: 168, s: 0.72, mood: "cry", shirt: C.amber, hairStyle: "short", arms: ["chin", "chin"], skin: 0 }) + person({ x: 240, y: 168, mood: "neutral", shirt: C.green, arms: "down", facing: -1, hairStyle: "long", hair: 1 }) + person({ x: 60, y: 168, mood: "neutral", shirt: C.blue, arms: "down", facing: 1, skin: 2 })],
     "pt-dropped-books": ["走廊上，同學的書掉了一地", () => BG.hallway() + person({ x: 130, y: 162, sit: true, mood: "worried", shirt: C.coral, arms: ["reach", "reach"], hairStyle: "long", hair: 0 }) + P.books(150, 150) + person({ x: 250, y: 162, mood: "neutral", shirt: C.teal, arms: "down", facing: -1, skin: 1 })],
     "pt-rain": ["下大雨，有人沒帶傘，用包包擋雨", () => BG.rain() + person({ x: 130, y: 172, mood: "worried", shirt: C.amber, arms: ["up", "up"], skin: 1 }) + `<rect x="108" y="50" width="44" height="10" rx="4" fill="${C.ink}"/>` + person({ x: 220, y: 172, mood: "neutral", shirt: C.teal, arms: ["down", "hold"], facing: -1, hairStyle: "long", hair: 2 }) + P.umbrella(222, 72)],
@@ -159,8 +182,8 @@
     "pt-priority-seat": ["捷運博愛座上，年輕人閉著眼，旁邊長輩站著", () => BG.train() + person({ x: 90, y: 158, sit: true, mood: "sad", shirt: C.purple, arms: ["chin", "hold"], skin: 1 }) + person({ x: 190, y: 172, old: true, mood: "neutral", shirt: C.amber, hairStyle: "short", arms: ["up", "down"], facing: -1 }) + P.thought(160, 30, "?")],
     "pt-crumpled-art": ["朋友把畫揉成一團，難過地坐著", () => BG.home() + P.easel(220, 70) + person({ x: 150, y: 160, sit: true, mood: "sad", shirt: C.coral, arms: ["chin", "chin"], hairStyle: "long", hair: 0 }) + P.crumple(110, 156) + P.crumple(190, 160) + P.crumple(204, 150)],
     // 連環圖說故事（第 1 張沿用上面的場景）
-    "st-stairs-2": ["一位學生走上前，問長輩需不需要幫忙", () => BG.stairs() + person({ x: 196, y: 120, old: true, mood: "neutral", shirt: C.purple, hairStyle: "bun", arms: ["hold", "hold"] }) + P.bags(178, 80) + person({ x: 150, y: 160, mood: "happy", shirt: C.teal, arms: ["down", "reach"], facing: 1, skin: 1 }) + P.bubble(10, 22, "Can I help you?")],
-    "st-stairs-3": ["學生幫忙提袋子，長輩開心地道謝", () => BG.stairs() + person({ x: 236, y: 100, s: 0.88, old: true, mood: "happy", shirt: C.purple, hairStyle: "bun", arms: ["down", "wave"], facing: -1 }) + person({ x: 190, y: 120, s: 0.88, mood: "happy", shirt: C.teal, arms: ["hold", "hold"], skin: 1 }) + P.bags(174, 84) + P.heart(262, 14) + P.bubble(20, 30, "Thank you, dear!")],
+    "st-stairs-2": ["一位學生走上前，問長輩需不需要幫忙", () => BG.stairs() + P.glow(176, 80, 70) + person({ x: 196, y: 120, old: true, mood: "neutral", shirt: C.purple, hairStyle: "bun", arms: ["hold", "hold"], facing: -1, lean: 3, gaze: [-1.2, 1.2] }) + P.bags(178, 80) + person({ x: 150, y: 160, mood: "happy", shirt: C.teal, arms: ["down", "reach"], facing: 1, skin: 1, lean: 5 }) + P.bubble(10, 22, "Can I help you?")],
+    "st-stairs-3": ["學生幫忙提袋子，長輩開心地道謝", () => BG.stairs() + P.glow(214, 56, 66) + person({ x: 236, y: 100, s: 0.88, old: true, mood: "happy", shirt: C.purple, hairStyle: "bun", arms: ["down", "wave"], facing: -1 }) + person({ x: 190, y: 120, s: 0.88, mood: "happy", shirt: C.teal, arms: ["hold", "hold"], skin: 1 }) + P.bags(174, 84) + P.heart(262, 14) + P.bubble(20, 30, "Thank you, dear!")],
     "st-lunch-2": ["一位同學端著餐盤，走過去打招呼", () => BG.cafeteria() + P.tray(60, 118) + person({ x: 80, y: 160, sit: true, mood: "sad", shirt: C.purple, arms: ["hold", "hold"], skin: 2 }) + person({ x: 170, y: 166, mood: "happy", shirt: C.coral, arms: ["hold", "wave"], facing: -1, hairStyle: "long" }) + P.tray(150, 108) + P.bubble(160, 34, "Hi! Can I sit here?")],
     "st-lunch-3": ["兩人一起吃午餐，開心地聊天", () => BG.cafeteria() + P.tray(46, 118) + P.tray(96, 118) + person({ x: 70, y: 160, sit: true, mood: "happy", shirt: C.purple, arms: ["hold", "hold"], skin: 2 }) + person({ x: 122, y: 160, sit: true, mood: "happy", shirt: C.coral, arms: ["hold", "wave"], facing: -1, hairStyle: "long" }) + P.heart(96, 40)],
     "st-rain-2": ["撐傘的人走過去，想一起撐傘", () => BG.rain() + person({ x: 120, y: 172, mood: "worried", shirt: C.amber, arms: ["up", "up"], skin: 1 }) + `<rect x="98" y="50" width="44" height="10" rx="4" fill="${C.ink}"/>` + person({ x: 190, y: 172, mood: "happy", shirt: C.teal, arms: ["reach", "hold"], facing: -1, hairStyle: "long", hair: 2 }) + P.umbrella(176, 72) + P.bubble(168, 26, "Share my umbrella?")],
