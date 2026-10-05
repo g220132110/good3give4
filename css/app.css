@@ -312,3 +312,11 @@ button.w{border:none;font-family:var(--display)}
 .gt-zh1[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .gt-nozh .gt-msg.gt-show .gt-zh{display:block}
 .gt-log:not(.gt-nozh) .gt-zh1{display:none}
+/* Good Talk：這句怎麼說更好 */
+.gt-me-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:4px;align-self:stretch}
+.gt-tipbtn{font-size:.82rem}
+.gt-tip{align-self:stretch;margin-left:12%;display:flex;flex-direction:column;gap:8px;background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:.92rem}
+.gt-tip .sb-tone{padding:8px 10px}
+.gt-fix{line-height:1.6}
+.gt-better{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.gt-better .en{font-size:1rem}

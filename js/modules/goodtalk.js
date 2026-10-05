@@ -10,6 +10,7 @@
  * AI 太忙時（任何一輪），讓使用者選「再送一次」或「用示範內容繼續」。
  * 中文對照：AI 每句回話附中文。上方「中文」開關控制全部（初級預設顯示）；
  * 每句旁的「中」按鈕只顯示那一句的翻譯。
+ * 這句怎麼說更好？：使用者自己的每一句下方可按，AI 即時給語氣、修正與更好說法（/api/rewrite，帶情境）。
  * ========================================================================= */
 (function () {
   const { $, esc } = App;
@@ -21,6 +22,8 @@
   let st = null;
   // 中文對照：初級預設顯示，其他預設隱藏；使用者切換後記住
   const zhOn = () => App.store.get("goodtalk.zh", App.profile.level == 1);
+  const TONE_CLASS = { 直接: "near", 中性: "plain", 禮貌: "ok", 溫暖: "ok", 可能冒犯: "miss", 無法分析: "plain" };
+  const tag = (label) => `<span class="sb-tag ${TONE_CLASS[label] || "plain"}">${esc(label)}</span>`;
   const zhLine = (zh) => (zh ? `<div class="gt-zh">${esc(zh)}</div>` : "");
   const scenes = () => (App.content.goodtalk || []).flatMap((p) => p.scenarios);
   const sceneOf = (id) => scenes().find((s) => s.id === id);
@@ -63,7 +66,7 @@
   /* ---------- 對話 ---------- */
   function start(sid) {
     App.speech.stop();
-    st = { sid, history: [], hint: "", done: false, demoMode: false, aiUsed: false, pending: false, stalled: false,
+    st = { sid, history: [], tips: {}, hint: "", done: false, demoMode: false, aiUsed: false, pending: false, stalled: false,
            analysis: null, analysisDemo: false, analysisNote: "", retry: null };
     renderChat();
     App.speech.speak(sceneOf(sid).opener, 0.9);
@@ -78,7 +81,40 @@
           ${zh ? `<button class="mini gt-zh1" data-zh1="${i}" aria-label="顯示這句的中文">中</button>` : ""}
         </span>
       </div>`;
-    return `<div class="gt-msg gt-me"><div class="gt-text">${esc(text)}</div></div>`;
+    return `<div class="gt-me-wrap">
+      <div class="gt-msg gt-me"><div class="gt-text">${esc(text)}</div></div>
+      ${tipBlock(i)}
+    </div>`;
+  }
+
+  /* ---------- 這句怎麼說更好？（使用者自己按才看，不打斷對話） ---------- */
+  function tipBlock(i) {
+    const t = st.tips[i];
+    if (!t) return `<button class="linkbtn gt-tipbtn" data-tip="${i}">這句怎麼說更好？</button>`;
+    if (t.loading) return `<div class="gt-tip muted">AI 正在看這句…</div>`;
+    if (t.error) return `<div class="gt-tip"><span class="muted">${esc(t.error)}</span> <button class="linkbtn" data-tip="${i}">再試一次</button></div>`;
+    const r = t.data;
+    return `<div class="gt-tip" data-from="Good Talk">
+      <div class="sb-tone">${tag(r.tone.label)}<p>${esc(r.tone.note)}</p></div>
+      ${r.fixes.map((f) => `<div class="gt-fix"><s class="muted">${esc(f.from)}</s> → <b>${esc(f.to)}</b> <small class="muted">${esc(f.note)}</small></div>`).join("")}
+      ${r.better.slice(0, 2).map((b) => `
+        <div class="gt-better">
+          <button class="mini" data-tipsay="${esc(b.en)}" aria-label="播放">${ICON.play}</button>
+          <div><div class="en">${App.ui.tokens(b.en)}</div><div class="muted" style="font-size:.88rem">${esc(b.zh)}・${esc(b.why)}</div></div>
+        </div>`).join("")}
+      <div class="tip" style="margin:0">可以參考上面的說法，在下一句用用看。</div>
+    </div>`;
+  }
+
+  async function tip(i) {
+    const all = lines();
+    st.tips[i] = { loading: true };
+    renderChat();
+    const r = await App.ai.call("rewrite", { text: all[i].text, scenario: st.sid, prompt: all[i - 1].text });
+    // 示範結果和這句無關，所以 AI 太忙時請使用者稍後再按，不顯示示範
+    st.tips[i] = r.ok && !r.demo ? { data: r.data } : { error: "AI 目前比較忙，稍等幾秒再按一次。" };
+    if (r.ok && !r.demo) App.virtue.logResult(r.data);
+    renderChat();
   }
 
   function lines() { const s = sceneOf(st.sid); return [{ role: "ai", text: s.opener, zh: s.openerZh }, ...st.history]; }
@@ -144,6 +180,8 @@
     else if (act === "finish") analyze();
     else if (act === "resend") askAI();
     else if (act === "demo") { st.demoMode = true; askAI(); }
+    else if (t.dataset.tip) tip(+t.dataset.tip);
+    else if (t.dataset.tipsay) App.speech.speak(t.dataset.tipsay, 0.9);
   }
 
   function send(text) {
