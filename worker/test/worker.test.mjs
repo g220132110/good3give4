@@ -218,3 +218,49 @@ test("chat：回傳中文翻譯", async () => {
     globalThis.fetch = realFetch;
   }
 });
+
+test("Think Well／文化大使：角色指示、事實限制、5 輪上限", async () => {
+  const realFetch = globalThis.fetch;
+  let sys = "";
+  globalThis.fetch = async (url, init) => {
+    sys = JSON.parse(init.body).systemInstruction.parts[0].text;
+    return gem('{"reply":"Oh, I see!","zh":"喔，我懂了！","hint":"h","done":false}')();
+  };
+  try {
+    await call("/api/chat", { scenario: "teammate-mistake", history: [{ role: "user", text: "Ken ruined everything." }] }, GEM);
+    assert.match(sys, /Coach Lee/);
+    assert.match(sys, /imagine the other person's side/);
+    assert.doesNotMatch(sys, /Never teach or correct/);
+    await call("/api/chat", { scenario: "ambassador-three-acts", history: [{ role: "user", text: "It means doing good." }] }, GEM);
+    assert.match(sys, /Venerable Master Hsing Yun/);
+    assert.match(sys, /Never add facts/);
+    const h = [];
+    for (let i = 0; i < 5; i++) h.push({ role: "user", text: "ok" }, { role: "ai", text: "ok" });
+    h.pop();
+    const r = await (await call("/api/chat", { scenario: "ambassador-three-acts", history: h }, GEM)).json();
+    assert.equal(r.data.done, true);
+    const r2 = await call("/api/analyze", { scenario: "ambassador-three-acts", history: [{ role: "user", text: "Good deeds." }] }, GEM);
+    assert.match(sys, /matched these facts/);
+    assert.equal(r2.status, 503); // 假回應不是分析格式 → 回報 busy
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("Gemini：逾時視為忙碌並改用備用模型", async () => {
+  const realFetch = globalThis.fetch;
+  const tried = [];
+  globalThis.fetch = async (url) => {
+    const m = String(url).match(/models\/([^:]+)/)[1];
+    tried.push(m);
+    if (m === "gemini-3.8-flash") { const e = new Error("aborted"); e.name = "AbortError"; throw e; }
+    return gem('{"reply":"Hi!","zh":"嗨！","hint":"h","done":false}')();
+  };
+  try {
+    const r = await (await call("/api/chat", { scenario: "good-news", history: [{ role: "user", text: "Wow!" }] }, GEM)).json();
+    assert.equal(r.data.reply, "Hi!");
+    assert.deepEqual(tried.slice(0, 2), ["gemini-3.8-flash", "gemini-3.8-flash-lite"]);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

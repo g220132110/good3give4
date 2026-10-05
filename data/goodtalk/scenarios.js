@@ -127,3 +127,96 @@ App.registerContent("goodtalk", {
     },
   ],
 });
+
+/* ---------- Think Well 換位思考、Global Share 文化大使 ----------
+ * kind：goodtalk／thinkwell／ambassador（決定在選單的哪一區）
+ * maxTurns 必須和後端一致；intro：開始前的中英對照介紹卡（自行撰寫）
+ */
+App.registerContent("goodtalk", {
+  scenarios: [
+    {
+      id: "teammate-mistake", kind: "thinkwell", giving: "存好心", maxTurns: 4,
+      zh: "隊友失誤輸了比賽", en: "A teammate's mistake",
+      who: "隊友 Ken 最後一球沒投進，你們輸了比賽。教練 Lee 看到你很不開心。",
+      task: "跟教練聊這場比賽：不怪罪 Ken，想想他的處境和大家能怎麼改進。",
+      opener: "Hey, you look upset. What happened in the game today?",
+      openerZh: "嘿，你看起來不太開心。今天比賽發生什麼事了？",
+      demo: {
+        replies: [
+          "I see. How do you think Ken feels right now?",
+          "That's a kind way to see it. What could the team do next time?",
+          "Great idea. Maybe you can tell Ken that too.",
+          "I'm proud of you. That's what a good teammate does.",
+        ],
+        repliesZh: ["我懂了。你覺得 Ken 現在感覺怎麼樣？", "這樣想很體貼。下次球隊可以怎麼做？", "好主意。也許你也可以這樣告訴 Ken。", "我以你為榮，這就是好隊友會做的事。"],
+        hints: ["先說發生了什麼事，不急著怪誰", "想想 Ken 現在的心情", "想一個大家可以一起改進的方法", "說說你想對 Ken 說什麼"],
+        analysis: {
+          summary: "示範模式無法分析你剛剛說的話。以下是這個情境裡常見的好說法，可以先跟讀練習。",
+          better: [
+            { you: "", en: "We lost the game, but everyone tried hard.", zh: "我們輸了比賽，但大家都很努力。", why: "描述事情，不怪罪某一個人", giving: "" },
+            { you: "", en: "Ken must feel terrible. Let's practice together next week.", zh: "Ken 一定很難過，下週我們一起練習吧。", why: "理解對方，並提出一起改進", giving: "給人希望" },
+          ],
+        },
+      },
+    },
+    {
+      id: "no-reply", kind: "thinkwell", giving: "存好心", maxTurns: 4,
+      zh: "朋友兩天沒回訊息", en: "A friend didn't reply",
+      who: "好朋友 Amy 已經兩天沒回你的訊息。朋友 Lin 注意到你一直看手機。",
+      task: "跟 Lin 聊聊：先別生氣，想想 Amy 可能有什麼別的原因。",
+      opener: "You keep checking your phone. Is something wrong?",
+      openerZh: "你一直在看手機，怎麼了嗎？",
+      demo: {
+        replies: [
+          "Two days? Hmm, do you know if she's okay?",
+          "Maybe. What else could be the reason?",
+          "That's true. What could you send her?",
+          "That sounds kind. I'm sure she'll appreciate it.",
+        ],
+        repliesZh: ["兩天？嗯，你知道她還好嗎？", "也許吧。還可能有什麼原因？", "說得也是。你可以傳什麼給她？", "聽起來很貼心，我相信她會很感謝。"],
+        hints: ["說說發生了什麼事", "想想 Amy 可能有什麼別的原因", "例如她可能很忙或手機壞了", "想一句關心她的訊息"],
+        analysis: {
+          summary: "示範模式無法分析你剛剛說的話。以下是這個情境裡常見的好說法，可以先跟讀練習。",
+          better: [
+            { you: "", en: "Maybe she's just busy. I'll wait a little.", zh: "也許她只是很忙，我再等等。", why: "先往好的方向想", giving: "" },
+            { you: "", en: "Hi Amy, I hope you're okay. Talk when you're free!", zh: "嗨 Amy，希望你一切都好，有空再聊！", why: "用關心代替抱怨", giving: "給人歡喜" },
+          ],
+        },
+      },
+    },
+    {
+      id: "ambassador-three-acts", kind: "ambassador", giving: "說好話", maxTurns: 5,
+      zh: "向外國旅客介紹三好四給", en: "Introduce the Three Acts of Goodness",
+      who: "澳洲旅客 Emma 第一次來台灣，看到「Three Acts of Goodness」的標語，很好奇是什麼意思。",
+      task: "用簡單的英文向 Emma 介紹三好四給，並舉生活中的例子。",
+      opener: "Hi! I saw a sign that says 'Three Acts of Goodness'. What does that mean?",
+      openerZh: "嗨！我看到一個寫著「Three Acts of Goodness」的標語，那是什麼意思？",
+      intro: [
+        { en: "The Three Acts of Goodness are: do good deeds, speak good words, and think good thoughts.", zh: "「三好」是：做好事、說好話、存好心。" },
+        { en: "They are about what we do, what we say, and what we think.", zh: "它們分別關於我們的行為、言語和心念。" },
+        { en: "The Four Givings are: give others confidence, joy, hope, and convenience.", zh: "「四給」是：給人信心、給人歡喜、給人希望、給人方便。" },
+        { en: "Venerable Master Hsing Yun of Fo Guang Shan started the Three Acts of Goodness movement in 1998.", zh: "佛光山星雲大師在 1998 年開始推動三好運動。" },
+        { en: "The ideas come from Buddhism, but anyone can practice them in daily life.", zh: "這些理念來自佛教，但每個人都能在生活中實踐。" },
+        { en: "For example: help someone carry heavy bags, say thank you, and try to understand others before judging.", zh: "例如：幫人提重物、說聲謝謝、先試著理解別人再下判斷。" },
+      ],
+      demo: {
+        replies: [
+          "Oh, that's interesting! Why is thinking good thoughts important?",
+          "I like that. Is it only for Buddhists?",
+          "Cool! How can I practice it when I travel here?",
+          "Nice! I also heard about the Four Givings. What are they?",
+          "Thank you! I learned something special in Taiwan today.",
+        ],
+        repliesZh: ["喔，好有趣！為什麼存好心很重要？", "我喜歡這個想法。這只適合佛教徒嗎？", "太好了！我在這裡旅行時可以怎麼實踐？", "不錯！我也聽說過四給，那是什麼？", "謝謝你！我今天在台灣學到很特別的東西。"],
+        hints: ["先說出三好是哪三個", "可以說好的想法會帶來好的話和行為", "這些是每個人都能做的日常小事", "舉一個旅行時能做的例子", "說出四給是哪四個"],
+        analysis: {
+          summary: "示範模式無法分析你剛剛說的話。以下是介紹三好四給時常用的好說法，可以先跟讀練習。",
+          better: [
+            { you: "", en: "They are: do good deeds, speak good words, and think good thoughts.", zh: "它們是：做好事、說好話、存好心。", why: "先清楚說出三個重點", giving: "給人方便" },
+            { you: "", en: "Anyone can practice them, like saying thank you to a bus driver.", zh: "每個人都能實踐，例如向公車司機說謝謝。", why: "用生活例子讓外國人容易懂", giving: "給人歡喜" },
+          ],
+        },
+      },
+    },
+  ],
+});

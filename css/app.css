@@ -320,3 +320,12 @@ button.w{border:none;font-family:var(--display)}
 .gt-fix{line-height:1.6}
 .gt-better{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
 .gt-better .en{font-size:1rem}
+/* 情境對話：分區、文化大使介紹卡 */
+h2.gt-kind{font-size:1.05rem;margin-top:2px}
+.gt-intro summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:8px}
+.gt-intro summary::-webkit-details-marker{display:none}
+.gt-intro summary::after{content:"▾";margin-left:auto;color:var(--ink-soft)}
+.gt-intro:not([open]) summary::after{content:"▸"}
+.gt-intro-line{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.gt-intro .en{font-size:1rem}
+.gt-intro > .btn{align-self:flex-start}

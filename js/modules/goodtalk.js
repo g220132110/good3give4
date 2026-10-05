@@ -4,7 +4,9 @@
  * 資料：App.content.goodtalk（data/goodtalk/*.js）；角色設定在後端 worker/src/scenarios.js
  * 儲存：goodtalk.done（各情境完成次數）；三好四給記在 App.virtue
  * AI：/api/chat（角色回話）、/api/analyze（對話分析）、/api/rewrite（Try Again）
- * 流程：選情境 → 和 AI 角色對話（最多 4 輪）→ 分析「你給了對方什麼」→ Try Again → 前後對照
+ * 流程：選情境 → 和 AI 角色對話（4–5 輪）→ 分析 → Try Again → 前後對照
+ * 三種情境共用同一個對話引擎（kind）：
+ *   goodtalk 四給情境、thinkwell 換位思考、ambassador 文化大使（附中英介紹卡）
  *
  * 示範模式：沒有設定 AI 時，整段改用內容包的預寫對話；
  * AI 太忙時（任何一輪），讓使用者選「再送一次」或「用示範內容繼續」。
@@ -16,7 +18,13 @@
   const { $, esc } = App;
   const ICON = App.ui.ICON;
   const SOURCE = "goodtalk";
-  const MAX_TURNS = 4;
+  const KINDS = [
+    { id: "goodtalk", label: "Good Talk · 四給", title: "用英文帶給別人信心、歡喜、希望、方便", result: "你給了對方什麼？" },
+    { id: "thinkwell", label: "Think Well · 換位思考", title: "先理解，再說話：練習存好心", result: "你怎麼想、怎麼說？" },
+    { id: "ambassador", label: "Global Share · 文化大使", title: "用英文向世界介紹三好四給", result: "你介紹得怎麼樣？" },
+  ];
+  const kindOf = (s) => KINDS.find((k) => k.id === (s.kind || "goodtalk")) || KINDS[0];
+  const maxTurns = () => sceneOf(st.sid).maxTurns || 4;
   const TAB_ICON = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h11v8H7l-4 3z"/><path d="M10 16h7l4 3V9h-4"/></svg>`;
 
   let st = null;
@@ -46,20 +54,25 @@
     const done = App.store.get("goodtalk.done", {});
     $("#gtList").innerHTML = `
       <div class="panel">
-        <div class="label">Good Talk · 四給情境對話</div>
-        <h2>用英文帶給別人信心、歡喜、希望、方便</h2>
-        <p class="muted" style="margin:0">和 AI 扮演的人物對話 4 輪。結束後，AI 會告訴你英文哪裡可以更好，以及你給了對方什麼。</p>
+        <div class="label">AI 情境對話</div>
+        <h2>和 AI 扮演的人物用英文對話</h2>
+        <p class="muted" style="margin:0">每段對話 4–5 輪。結束後，AI 會告訴你英文哪裡可以更好，以及你這次展現了哪些三好四給。</p>
       </div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        ${scenes().map((s, i) => `
-          <button class="unit gt-scene" data-sid="${s.id}">
-            <span class="no">${String(i + 1).padStart(2, "0")}</span>
-            <span><h3>${esc(s.zh)}</h3><span class="meta">${esc(s.en)}</span><span class="gt-give">${App.virtue.badge(s.giving)}</span></span>
-            <span class="badge ${done[s.id] ? "done" : ""}">${done[s.id] ? `完成 ${done[s.id]} 次` : "未開始"}</span>
-          </button>`).join("")}
-      </div>`;
+      ${KINDS.map((k) => {
+        const list = scenes().filter((s) => (s.kind || "goodtalk") === k.id);
+        if (!list.length) return "";
+        return `<div class="stack" style="gap:10px">
+          <div><div class="label">${esc(k.label)}</div><h2 class="gt-kind">${esc(k.title)}</h2></div>
+          ${list.map((s, i) => `
+            <button class="unit gt-scene" data-sid="${s.id}">
+              <span class="no">${String(i + 1).padStart(2, "0")}</span>
+              <span><h3>${esc(s.zh)}</h3><span class="meta">${esc(s.en)}</span><span class="gt-give">${App.virtue.badge(s.giving)}</span></span>
+              <span class="badge ${done[s.id] ? "done" : ""}">${done[s.id] ? `完成 ${done[s.id]} 次` : "未開始"}</span>
+            </button>`).join("")}
+        </div>`;
+      }).join("")}`;
     $("#gtList").onclick = (e) => { const b = e.target.closest("[data-sid]"); if (b) start(b.dataset.sid); };
-    App.setHeader("Good Talk", "四給情境對話");
+    App.setHeader("情境對話", "Good Talk · Think Well · Global Share");
     show("gtList");
   }
 
@@ -85,6 +98,21 @@
       <div class="gt-msg gt-me"><div class="gt-text">${esc(text)}</div></div>
       ${tipBlock(i)}
     </div>`;
+  }
+
+  /* ---------- 文化大使：開始前的中英對照介紹卡 ---------- */
+  function introCard(s, open) {
+    return `<details class="panel gt-intro" ${open ? "open" : ""} data-from="Global Share">
+      <summary><span class="label">先讀一讀</span> <b>三好四給英文介紹</b></summary>
+      <div class="gt-log ${zhOn() ? "" : "gt-nozh"}" style="gap:8px">
+        ${s.intro.map((p, i) => `
+          <div class="gt-intro-line">
+            <button class="mini" data-introsay="${i}" aria-label="播放">${ICON.play}</button>
+            <div><div class="en">${App.ui.tokens(p.en)}</div>${zhLine(p.zh)}</div>
+          </div>`).join("")}
+      </div>
+      <button class="btn btn-ghost sb-sm" data-act="introall">${ICON.play}全部朗讀</button>
+    </details>`;
   }
 
   /* ---------- 這句怎麼說更好？（使用者自己按才看，不打斷對話） ---------- */
@@ -124,7 +152,7 @@
     const s = sceneOf(st.sid), n = userTurns();
     $("#gtChat").innerHTML = `
       <div class="section-head">
-        <div><div class="label">Good Talk · ${esc(s.en)}</div><h2>${esc(s.zh)}</h2></div>
+        <div><div class="label">${esc(kindOf(s).label)} · ${esc(s.en)}</div><h2>${esc(s.zh)}</h2></div>
         <span class="row" style="gap:12px;align-items:center;flex-wrap:nowrap">
           <button class="gt-zhbtn" data-act="zh" aria-pressed="${zhOn()}" title="顯示／隱藏中文翻譯">中文</button>
           <button class="linkbtn" data-act="leave">離開</button>
@@ -135,6 +163,7 @@
         <div><b>${esc(s.task)}</b> ${App.virtue.badge(s.giving)}</div>
         <div class="muted" style="font-size:.9rem">${esc(s.who)}</div>
       </div>
+      ${s.intro ? introCard(s, userTurns() === 0) : ""}
       ${st.demoMode ? App.ask.notice(true, "AI 目前連不到，這段對話使用預先寫好的回應。") : ""}
       <div class="gt-log ${zhOn() ? "" : "gt-nozh"}" id="gtLog">
         ${lines().map((l, i) => bubble(l.role, l.text, i, l.zh)).join("")}
@@ -143,7 +172,7 @@
       <div id="gtStall"></div>
       <div class="panel" id="gtInput">
         <div class="topbar">
-          <span class="label" style="font-variant-numeric:tabular-nums">第 ${Math.min(n + 1, MAX_TURNS)} / ${MAX_TURNS} 輪</span>
+          <span class="label" style="font-variant-numeric:tabular-nums">第 ${Math.min(n + 1, maxTurns())} / ${maxTurns()} 輪</span>
           <span style="flex:1"></span>
           ${st.hint ? `<button class="linkbtn" data-act="hint">需要提示</button>` : ""}
         </div>
@@ -156,13 +185,13 @@
         <p class="muted" style="margin:0">看看你這次用英文給了對方什麼。</p>
         <button class="btn btn-primary" data-act="finish">看分析</button>
       </div>`;
-    const ended = st.done || n >= MAX_TURNS;
+    const ended = st.done || n >= maxTurns();
     $("#gtInput").hidden = ended;
     $("#gtEnd").hidden = !ended || st.pending;
     if (!ended) App.ask.wire("gtC", send);
     if (st.pending) App.ask.busy("gtC", true, "對方正在回應…");
     $("#gtChat").onclick = onChatClick;
-    if ($("#gtChat").hidden) { App.setHeader("Good Talk", "四給情境對話"); show("gtChat"); }
+    if ($("#gtChat").hidden) { App.setHeader("情境對話", kindOf(s).label); show("gtChat"); }
     const log = $("#gtLog"); log.lastElementChild && log.lastElementChild.scrollIntoView({ block: "nearest" });
   }
 
@@ -174,13 +203,15 @@
     if (act === "leave") { App.speech.stop(); renderList(); }
     else if (act === "zh") {
       const on = !zhOn(); App.store.set("goodtalk.zh", on);
-      t.setAttribute("aria-pressed", on); $("#gtLog").classList.toggle("gt-nozh", !on);
+      t.setAttribute("aria-pressed", on); App.$$("#gtChat .gt-log").forEach((el) => el.classList.toggle("gt-nozh", !on));
     }
     else if (act === "hint") { $("#gtHint").hidden = false; t.hidden = true; }
     else if (act === "finish") analyze();
     else if (act === "resend") askAI();
     else if (act === "demo") { st.demoMode = true; askAI(); }
     else if (t.dataset.tip) tip(+t.dataset.tip);
+    else if (t.dataset.introsay) App.speech.speak(sceneOf(st.sid).intro[+t.dataset.introsay].en, 0.9);
+    else if (act === "introall") App.speech.speak(sceneOf(st.sid).intro.map((p) => p.en).join(" "), 0.9);
     else if (t.dataset.tipsay) App.speech.speak(t.dataset.tipsay, 0.9);
   }
 
@@ -206,11 +237,11 @@
       const k = Math.min(n - 1, s.demo.replies.length - 1);
       reply = s.demo.replies[k]; zh = (s.demo.repliesZh || [])[k] || "";
       hint = s.demo.hints[Math.min(n, s.demo.hints.length - 1)];
-      done = n >= MAX_TURNS;
+      done = n >= maxTurns();
     }
     st.history.push({ role: "ai", text: reply, zh });
     st.hint = hint;
-    st.done = done || n >= MAX_TURNS;
+    st.done = done || n >= maxTurns();
     st.pending = false;
     renderChat();
     App.speech.speak(reply, 0.9);
@@ -267,7 +298,7 @@
     const a = st.analysis, s = sceneOf(st.sid);
     const rt = st.history.some((h) => h.role === "user") ? promptBefore(a.retry.turn) : null;
     $("#gtResult").innerHTML = `
-      <div class="section-head"><div><div class="label">Good Talk · ${esc(s.en)}</div><h2>你給了對方什麼？</h2></div>
+      <div class="section-head"><div><div class="label">${esc(kindOf(s).label)} · ${esc(s.en)}</div><h2>${esc(kindOf(s).result)}</h2></div>
         <button class="linkbtn" data-act="list">換一個情境</button></div>
       ${App.ask.notice(st.analysisDemo, st.analysisNote, 'data-act="reanalyze"')}
       <div class="panel">
@@ -313,7 +344,7 @@
       else if (t.dataset.act === "again") start(st.sid);
       else if (t.dataset.act === "reanalyze") { st.demoMode = false; analyze(); }
     };
-    App.setHeader("Good Talk", "對話分析");
+    App.setHeader("情境對話", "對話分析");
     show("gtResult");
   }
 

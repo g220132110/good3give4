@@ -11,7 +11,7 @@
  * 後端網址：App.config.aiEndpoint，或在 index.html 設 window.EP_AI_ENDPOINT。
  */
 (function () {
-  const TIMEOUT = 25000;
+  const TIMEOUT = 30000; // 後端所有備用模型合計最多 20 秒
 
   function endpoint() {
     return ((App.config && App.config.aiEndpoint) || window.EP_AI_ENDPOINT || "").replace(/\/$/, "");
@@ -42,8 +42,10 @@
   async function call(task, input, opts = {}) {
     let r;
     for (let i = 0; ; i++) {
+      const t0 = Date.now();
       r = await callOnce(task, input, opts);
-      if (!r.retryable || i >= RETRY_DELAYS.length) return r;
+      // 只在 AI「很快就回報太忙」時重試；已經等很久的（後端試過所有模型）就不再讓使用者等
+      if (!r.retryable || i >= RETRY_DELAYS.length || Date.now() - t0 > 8000) return r;
       await wait(RETRY_DELAYS[i]);
     }
   }

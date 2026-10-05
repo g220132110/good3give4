@@ -3,7 +3,8 @@
 以 English Pass 為底層，加上 v0.5 規格：
 
 - **第一階段**：後端代理、App.ai、App.virtue、Say It Better（說好話 AI 語氣教練＋Try Again）
-- **第二階段**：對話引擎（/api/chat、/api/analyze）、Good Talk 四給情境對話 4 個、App.ask 共用輸入元件
+- **第二階段**：對話引擎（/api/chat、/api/analyze）、Good Talk 四給情境對話 4 個、App.ask 共用輸入元件、中文對照、這句怎麼說更好
+- **第三階段**：Think Well 換位思考 2 個、Global Share 文化大使 1 套（中英介紹卡、事實限制），與 Good Talk 共用對話引擎
 
 ## 本機試用
 
@@ -16,6 +17,7 @@ node --test worker/test/*.mjs                    # 後端測試
 FAKE_AI=1 node dev/server.mjs                    # 測試用假 AI（不連網，測 AI 路徑）
 node dev/e2e.mjs                                 # 說好話瀏覽器實測（需要 playwright）
 node dev/e2e-goodtalk.mjs                        # Good Talk 瀏覽器實測（AI 路徑＋示範模式）
+node dev/e2e-phase3.mjs                          # Think Well、Global Share 瀏覽器實測
 ```
 
 麥克風需要 https 或 localhost。直接雙擊 index.html 也能開，但只會用示範內容。
@@ -24,12 +26,12 @@ node dev/e2e-goodtalk.mjs                        # Good Talk 瀏覽器實測（A
 
 | 檔案 | 說明 |
 |---|---|
-| `worker/` | 後端代理（Cloudflare Workers）：/api/rewrite、Claude／Gemini 轉接、JSON 驗證、示範模式、備用模型、來源限制、用量上限、16 項測試 |
+| `worker/` | 後端代理（Cloudflare Workers）：/api/rewrite、Claude／Gemini 轉接、JSON 驗證、示範模式、備用模型、來源限制、用量上限、18 項測試 |
 | `js/core/ai.js` | 新增：`App.ai.call(任務, 輸入)`，負責逾時、降級、裝置用量 |
 | `js/core/virtue.js` | 新增：`App.virtue.badge()`、`log()`、`stats()`，用於三好四給徽章與 Passport |
 | `js/core/ask.js` | 新增：`App.ask` 共用的麥克風＋打字、跟讀、示範提示與「再送一次」 |
 | `js/modules/goodtalk.js` | 新增：Good Talk 四給情境對話（對話、中文對照開關、提示、分析、Try Again、示範模式） |
-| `data/goodtalk/scenarios.js` | 新增：4 個情境的畫面文字與示範內容（角色設定在 `worker/src/scenarios.js`） |
+| `data/goodtalk/scenarios.js` | 新增：7 個情境（四給 4、換位思考 2、文化大使 1）的畫面文字、中文對照、介紹卡與示範內容（角色設定在 `worker/src/scenarios.js`） |
 | `js/modules/saybetter.js` | 新增：Say It Better 模組。語音與跟讀評分直接用 `App.speech.listen/parse/grade`，和口說模組相同 |
 | `data/saybetter/contexts.js` | 新增：6 個情境、範例句、離線示範結果，以及 12 個重點字的字典條目（字典已有的字不覆蓋） |
 | `css/app.css` | 末端新增「三好四給徽章」「Say It Better」「Good Talk」區塊，全部用既有的 tokens |

@@ -1,7 +1,8 @@
 // 模型轉接層：同一個介面，可切換 Claude 或 Gemini。
 // complete({ system, user, env }) → 模型回傳的純文字。
 
-const TIMEOUT_MS = 20000;
+const TIMEOUT_MS = 12000; // 單一模型最多等 12 秒
+const CHAIN_BUDGET_MS = 20000; // 所有備用模型合計最多 20 秒，避免前端先逾時
 
 async function post(url, headers, body) {
   const ctrl = new AbortController();
@@ -59,18 +60,22 @@ const gemini = {
   },
   async complete({ system, user, env }) {
     let lastErr;
+    const start = Date.now();
     for (const model of this.models(env)) {
+      if (lastErr && Date.now() - start > CHAIN_BUDGET_MS - TIMEOUT_MS) break; // 剩下的時間不夠再試一個模型
       try {
         const text = await this.once(model, system, user, env);
         this.lastModel = model;
         return text;
       } catch (err) {
         lastErr = err;
-        if (!RETRYABLE.has(err.status)) throw err;
+        if (err.name === "AbortError") { err.status = 504; err.provider = true; }
+        if (!RETRYABLE.has(err.status) && err.status !== 504) throw err;
         console.error(`gemini ${model} unavailable (${err.status}), trying next`);
       }
     }
     lastErr.busy = lastErr.status !== 404;
+    lastErr.provider = true;
     throw lastErr;
   },
   async once(model, system, user, env) {
