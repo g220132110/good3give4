@@ -14,6 +14,7 @@
 
   let st = null; // { ctx, first, result, demo, demoNote, retry, retryResult }
 
+  const BUSY = "AI 目前使用的人太多，先顯示示範結果。稍等幾秒再送出一次就好。";
   const contexts = () => (App.content.saybetter || []).flatMap((p) => p.contexts);
   const ctxOf = (id) => contexts().find((c) => c.id === id) || contexts()[0];
   const keySet = (keys) => new Set((keys || []).map((k) => App.dict.lookup(k).key));
@@ -111,7 +112,7 @@
 
   async function analyze(text, previous) {
     const r = await App.ai.call("rewrite", { text, context: st.ctx, previous: previous || undefined });
-    if (r.ok) return { data: r.data, demo: r.demo };
+    if (r.ok) return { data: r.data, demo: r.demo, note: r.reason === "busy" ? BUSY : "" };
     if (r.quota || r.offline) return { data: offline(text, Boolean(previous)), demo: true, note: r.message };
     return { error: r.message };
   }
@@ -154,8 +155,8 @@
   }
 
   /* ---------- 結果畫面 ---------- */
-  const demoNotice = () => st.demo
-    ? `<div class="notice">示範模式：${esc(st.demoNote || "目前顯示的是預先準備的示範結果，不是 AI 即時分析。")}</div>` : "";
+  const demoNotice = (on, note) => on
+    ? `<div class="notice">示範模式：${esc(note || "目前顯示的是預先準備的示範結果，不是 AI 即時分析。")}</div>` : "";
 
   function goodPanel(res) {
     const items = [...res.acts, ...res.givings];
@@ -170,7 +171,7 @@
     $("#sbResult").innerHTML = `
       <div class="section-head"><div><div class="label">Say It Better</div><h2>${esc(ctxOf(st.ctx).zh)}</h2></div>
         <button class="linkbtn" data-act="restart">換一句</button></div>
-      ${demoNotice()}
+      ${demoNotice(st.demo, st.demoNote)}
       <div class="panel">
         <div class="label">你說的</div>
         <div class="en">${esc(st.first)}</div>
@@ -242,8 +243,7 @@
     const r = await analyze(text, st.first);
     busy("sbR", false);
     if (r.error) return err("sbR", r.error);
-    st.retry = text; st.retryResult = r.data;
-    if (r.demo) { st.demo = true; st.demoNote = st.demoNote || r.note; }
+    st.retry = text; st.retryResult = r.data; st.retryDemo = r.demo; st.retryNote = r.note;
     App.virtue.log("說好話", SOURCE);
     [...r.data.acts, ...r.data.givings].forEach((x) => x.name !== "說好話" && App.virtue.log(x.name));
     renderCompare();
@@ -253,7 +253,7 @@
   function renderCompare() {
     const r = st.retryResult, c = r.compare || { improved: false, note: "" };
     $("#sbCompare").innerHTML = `
-      ${demoNotice()}
+      ${demoNotice(st.retryDemo, st.retryNote)}
       <div class="panel ${c.improved ? "sb-up" : ""}">
         <div class="label">Before · After</div>
         <h2>${c.improved ? "你進步了！" : "再接再厲"}</h2>
@@ -277,7 +277,7 @@
   }
 
   function restart() {
-    Object.assign(st, { first: "", result: null, demo: false, demoNote: "", retry: "", retryResult: null });
+    Object.assign(st, { first: "", result: null, demo: false, demoNote: "", retry: "", retryResult: null, retryDemo: false, retryNote: "" });
     renderInput();
   }
 

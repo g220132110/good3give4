@@ -3,6 +3,7 @@
  *   const r = await App.ai.call("rewrite", { text, level, context });
  *   r.ok      → 有拿到結果（AI 或後端示範模式）
  *   r.demo    → true＝示範結果，畫面要標示「示範模式」
+ *   r.reason  → demo 的原因："busy"＝AI 太忙，稍後再試即可
  *   r.data    → 任務的固定格式 JSON
  *   r.offline → true＝連不到後端，模組應改用內容包裡的示範
  *   r.message → 給使用者看的中文訊息（失敗時）
@@ -60,7 +61,7 @@
       if (body.quota && body.quota.limit) {
         App.store.set("ai.quota", { day: today(), used: body.quota.used, limit: body.quota.limit });
       }
-      return { ok: true, demo: Boolean(body.demo), data: body.data };
+      return { ok: true, demo: Boolean(body.demo), reason: body.reason || "", data: body.data };
     } catch (err) {
       return {
         ok: false,
