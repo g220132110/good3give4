@@ -14,19 +14,21 @@
   let last = {};
   try { last = JSON.parse(localStorage.getItem("qa.prev") || "{}"); } catch (e) {}
 
+  // 太忙最多再試一次；「今日額度用完」就不再試（重試只會浪費額度）
   async function send(c) {
     const body = { level: "B1", ...c.input };
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       const t0 = Date.now();
       try {
         const res = await fetch(`${ENDPOINT}/api/${c.task}`, { method: "POST", headers: { "content-type": "application/json", "x-ep-device": "qa-runner" }, body: JSON.stringify(body) });
         const j = await res.json().catch(() => ({}));
-        if (res.ok && j.ok && !j.demo) return { ok: true, data: j.data, ms: Date.now() - t0, model: j.model || "" };
-        if (j.error === "quota") return { ok: false, why: "今日額度用完" };
-        if (i < 2) { await wait(6000); continue; }
-        return { ok: false, why: j.demo ? "AI 沒回應（示範結果）" : j.message || `HTTP ${res.status}` };
+        if (res.ok && j.ok && !j.demo) return { ok: true, data: j.data, ms: Date.now() - t0 };
+        if (j.error === "quota") return { ok: false, why: "今日額度用完（後端上限）", stop: true };
+        if (j.error === "ai_quota" || j.reason === "ai_quota") return { ok: false, why: "Gemini 免費版今日額度用完", stop: true };
+        if (i < 1) { await wait(8000); continue; }
+        return { ok: false, why: j.demo ? "AI 太忙（後端改回示範結果）" : j.message || `HTTP ${res.status}` };
       } catch (e) {
-        if (i < 2) { await wait(6000); continue; }
+        if (i < 1) { await wait(8000); continue; }
         return { ok: false, why: "連不上後端" };
       }
     }
@@ -105,6 +107,7 @@
     stop = false; $("#qaStop").hidden = false;
     const snapshot = {}; CASES.forEach((c) => { snapshot[c.id] = status(results[c.id]); });
     localStorage.setItem("qa.prev", JSON.stringify(snapshot)); last = snapshot;
+    let fails = 0;
     for (let i = 0; i < list.length && !stop; i++) {
       const c = list[i];
       running = c.id; render();
@@ -114,7 +117,9 @@
       r.at = new Date().toISOString();
       results[c.id] = r;
       localStorage.setItem("qa.results", JSON.stringify(results));
-      if (r.why === "今日額度用完") { stop = true; alert("今天的 AI 額度用完了，明天再跑剩下的。"); }
+      fails = r.ok ? 0 : fails + 1;
+      if (r.stop) { stop = true; alert(`${r.why}。額度每天台灣時間下午約 3–4 點重置，之後按「只重跑失敗／沒跑到的」接著跑。`); }
+      else if (fails >= 3) { stop = true; alert("連續 3 題 AI 都沒有回應，先暫停，免得浪費額度。可能是免費額度用完或 AI 很忙，過一陣子再按「只重跑失敗／沒跑到的」。"); }
       if (i < list.length - 1 && !stop) await wait(GAP);
     }
     running = false; $("#qaStop").hidden = true; render();

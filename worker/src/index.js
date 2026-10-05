@@ -114,7 +114,7 @@ async function handleRewrite(body, env) {
     return { data, demo: false };
   } catch (err) {
     console.error("rewrite failed:", err.message);
-    return { data: mockRewrite({ text, previous }), demo: true, reason: err.busy ? "busy" : "error" };
+    return { data: mockRewrite({ text, previous }), demo: true, reason: err.dailyQuota ? "ai_quota" : err.busy ? "busy" : "error" };
   }
 }
 
@@ -137,11 +137,13 @@ function readDialogue(body) {
   return { scenario, history, level, userTurns: history.filter((h) => h.role === "user").length };
 }
 
-const busy = (err) => ({
-  status: 503,
-  error: "busy",
-  message: err && err.status === 404 ? "AI 模型設定有誤，請通知管理者。" : "AI 目前使用的人太多，稍等幾秒再送出一次就好。",
-});
+const busy = (err) => err && err.dailyQuota
+  ? { status: 503, error: "ai_quota", message: "今天的免費 AI 額度用完了，先用示範內容練習；額度每天台灣時間下午約 3–4 點重置。" }
+  : {
+    status: 503,
+    error: "busy",
+    message: err && err.status === 404 ? "AI 模型設定有誤，請通知管理者。" : "AI 目前使用的人太多，稍等幾秒再送出一次就好。",
+  };
 
 async function handleChat(body, env) {
   const d = readDialogue(body);
@@ -243,6 +245,7 @@ export default {
         } catch (err) {
           out.ok = false;
           out.test = "failed";
+          if (err.dailyQuota) out.dailyQuota = true;
           out.error = String(err.message || err).replace(/key=[^&\s]+/g, "key=***").slice(0, 400);
         }
       }

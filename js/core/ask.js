@@ -116,8 +116,10 @@
   }
 
   // 示範模式提示；resend 是按鈕上的屬性（例如 'data-act="resend"'），AI 太忙時才顯示
+  const QUOTA = "今天的免費 AI 額度用完了，先用示範內容練習；額度每天台灣時間下午約 3–4 點重置。";
   function notice(on, note, resend) {
     if (!on) return "";
+    if (note === BUSY && App.ai && App.ai.dailyQuota) note = QUOTA;
     const showResend = resend && note === BUSY;
     return `<div class="notice sb-notice"><span>示範模式：${esc(note || "目前顯示的是預先準備的示範結果，不是 AI 即時分析。")}</span>
       ${showResend ? `<button class="btn btn-dark sb-sm" ${resend}>再送一次</button>` : ""}</div>`;

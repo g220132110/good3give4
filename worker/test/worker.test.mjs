@@ -312,3 +312,18 @@ test("describe：三格故事與 B2 推想圖", async () => {
     globalThis.fetch = realFetch;
   }
 });
+
+test("Gemini 每個模型都回額度用完 → ai_quota", async () => {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response('{"error":{"code":429,"status":"RESOURCE_EXHAUSTED","message":"You exceeded your current quota"}}', { status: 429 });
+  try {
+    const res = await call("/api/describe", { picture: "pt-stairs", text: "An old woman." }, GEM);
+    const j = await res.json();
+    assert.equal(res.status, 503);
+    assert.equal(j.error, "ai_quota");
+    const r2 = await (await call("/api/rewrite", { text: "Give me the menu." }, GEM)).json();
+    assert.equal(r2.reason, "ai_quota");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

@@ -505,9 +505,10 @@ var gemini = {
     return [...new Set(list.map((m) => m.trim()).filter(Boolean))].slice(0, 4);
   },
   async complete({ system, user, env }) {
-    let lastErr;
+    let lastErr, quotaHits = 0, tried = 0;
     const start = Date.now();
     for (const model of this.models(env)) {
+      tried++;
       if (lastErr && Date.now() - start > CHAIN_BUDGET_MS - TIMEOUT_MS) break;
       try {
         const text = await this.once(model, system, user, env);
@@ -520,10 +521,12 @@ var gemini = {
           err.provider = true;
         }
         if (!RETRYABLE.has(err.status) && err.status !== 504) throw err;
+        if (err.status === 429 && /quota|RESOURCE_EXHAUSTED|per day|PerDay/i.test(err.message)) quotaHits++;
         console.error(`gemini ${model} unavailable (${err.status}), trying next`);
       }
     }
     lastErr.busy = lastErr.status !== 404;
+    lastErr.dailyQuota = quotaHits > 0 && quotaHits === tried;
     lastErr.provider = true;
     throw lastErr;
   },
@@ -697,7 +700,7 @@ async function handleRewrite(body, env) {
     return { data, demo: false };
   } catch (err) {
     console.error("rewrite failed:", err.message);
-    return { data: mockRewrite({ text, previous }), demo: true, reason: err.busy ? "busy" : "error" };
+    return { data: mockRewrite({ text, previous }), demo: true, reason: err.dailyQuota ? "ai_quota" : err.busy ? "busy" : "error" };
   }
 }
 function readDialogue(body) {
@@ -715,11 +718,11 @@ function readDialogue(body) {
   const level = LEVELS.includes(body.level) ? body.level : "B1";
   return { scenario, history, level, userTurns: history.filter((h) => h.role === "user").length };
 }
-var busy = (err) => ({
+var busy = (err) => err && err.dailyQuota ? { status: 503, error: "ai_quota", message: "\u4ECA\u5929\u7684\u514D\u8CBB AI \u984D\u5EA6\u7528\u5B8C\u4E86\uFF0C\u5148\u7528\u793A\u7BC4\u5167\u5BB9\u7DF4\u7FD2\uFF1B\u984D\u5EA6\u6BCF\u5929\u53F0\u7063\u6642\u9593\u4E0B\u5348\u7D04 3\u20134 \u9EDE\u91CD\u7F6E\u3002" } : {
   status: 503,
   error: "busy",
   message: err && err.status === 404 ? "AI \u6A21\u578B\u8A2D\u5B9A\u6709\u8AA4\uFF0C\u8ACB\u901A\u77E5\u7BA1\u7406\u8005\u3002" : "AI \u76EE\u524D\u4F7F\u7528\u7684\u4EBA\u592A\u591A\uFF0C\u7A0D\u7B49\u5E7E\u79D2\u518D\u9001\u51FA\u4E00\u6B21\u5C31\u597D\u3002"
-});
+};
 async function handleChat(body, env) {
   const d = readDialogue(body);
   if (d.error) return d.error;
@@ -814,6 +817,7 @@ var src_default = {
         } catch (err) {
           out.ok = false;
           out.test = "failed";
+          if (err.dailyQuota) out.dailyQuota = true;
           out.error = String(err.message || err).replace(/key=[^&\s]+/g, "key=***").slice(0, 400);
         }
       }

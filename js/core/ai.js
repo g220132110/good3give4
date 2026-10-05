@@ -65,6 +65,8 @@
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok || !body.ok) {
+        App.ai.dailyQuota = body.error === "ai_quota";
+        if (App.ai.dailyQuota) return { ok: false, offline: true, aiQuota: true, message: body.message };
         return {
           ok: false,
           offline: res.status >= 500,
@@ -78,6 +80,7 @@
         App.store.set("ai.quota", { day: today(), used: body.quota.used, limit: body.quota.limit });
       }
       const out = { ok: true, demo: Boolean(body.demo), reason: body.reason || "", data: body.data };
+      App.ai.dailyQuota = out.reason === "ai_quota"; // 免費 AI 今日額度用完：示範提示改說明原因，不再叫人「再送一次」
       if (out.demo && out.reason === "busy") out.retryable = true; // 後端改回示範是因為太忙：也重試
       return out;
     } catch (err) {
@@ -96,5 +99,5 @@
     return q.day === today() ? { used: q.used || 0, limit: q.limit || 0 } : { used: 0, limit: q.limit || 0 };
   }
 
-  App.ai = { call, quota, endpoint };
+  App.ai = { call, quota, endpoint, dailyQuota: false };
 })();

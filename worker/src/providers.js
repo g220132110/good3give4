@@ -59,9 +59,10 @@ const gemini = {
     return [...new Set(list.map((m) => m.trim()).filter(Boolean))].slice(0, 4);
   },
   async complete({ system, user, env }) {
-    let lastErr;
+    let lastErr, quotaHits = 0, tried = 0;
     const start = Date.now();
     for (const model of this.models(env)) {
+      tried++;
       if (lastErr && Date.now() - start > CHAIN_BUDGET_MS - TIMEOUT_MS) break; // 剩下的時間不夠再試一個模型
       try {
         const text = await this.once(model, system, user, env);
@@ -71,10 +72,13 @@ const gemini = {
         lastErr = err;
         if (err.name === "AbortError") { err.status = 504; err.provider = true; }
         if (!RETRYABLE.has(err.status) && err.status !== 504) throw err;
+        if (err.status === 429 && /quota|RESOURCE_EXHAUSTED|per day|PerDay/i.test(err.message)) quotaHits++;
         console.error(`gemini ${model} unavailable (${err.status}), trying next`);
       }
     }
     lastErr.busy = lastErr.status !== 404;
+    // 每個模型都回「額度用完」：多半是免費版每日上限，等重置才會恢復
+    lastErr.dailyQuota = quotaHits > 0 && quotaHits === tried;
     lastErr.provider = true;
     throw lastErr;
   },
