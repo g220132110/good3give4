@@ -17,7 +17,7 @@
   };
 
   /* ---------- 人物 ----------
-   * x：中心、y：腳底；s：比例；mood：happy／sad／worried／neutral／cry
+   * x：中心、y：腳底；s：比例；mood：happy／sad／worried／neutral／cry／upset（皺眉）
    * arms：down／wave／point／hold／up／hug／reach；sit：坐姿；old：長輩（灰髮、拐杖）
    * 2.0：lean：上半身前傾角度（正數往右）；gaze：[dx, dy] 眼睛看的方向；shadow:false 不畫接地陰影
    */
@@ -78,10 +78,11 @@
     const mood = mood0(o);
     const [gx, gy] = o.gaze || [facing * 0.8, 0];
     if (mood === "cry") g.push(`<path d="M${f - 7} ${ey}q2 -2 4 0M${f + 3} ${ey}q2 -2 4 0" stroke="${C.ink}" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M${f - 6} ${ey + 3}v6M${f + 6} ${ey + 3}v6" stroke="${C.blue}" stroke-width="2" stroke-linecap="round"/>`);
-    else if (mood === "sad" || mood === "worried") g.push(`${eye(f - 5 + gx, ey + 1 + gy)}${eye(f + 5 + gx, ey + 1 + gy)}<path d="M${f - 8} ${ey - 4}l4 ${mood === "sad" ? 2 : -1}M${f + 8} ${ey - 4}l-4 ${mood === "sad" ? 2 : -1}" stroke="${C.ink}" stroke-width="1.4" stroke-linecap="round"/>`);
+    else if (mood === "sad" || mood === "worried") g.push(`${eye(f - 5 + gx, ey + 1 + gy)}${eye(f + 5 + gx, ey + 1 + gy)}<path d="M${f - 8} ${ey - 4}l4 ${mood === "sad" ? -2 : -1}M${f + 8} ${ey - 4}l-4 ${mood === "sad" ? -2 : -1}" stroke="${C.ink}" stroke-width="1.4" stroke-linecap="round"/>`);
+    else if (mood === "upset") g.push(`${eye(f - 5 + gx, ey + 1 + gy)}${eye(f + 5 + gx, ey + 1 + gy)}<path d="M${f - 9} ${ey - 5}l5 2.5M${f + 9} ${ey - 5}l-5 2.5" stroke="${C.ink}" stroke-width="1.6" stroke-linecap="round"/>`);
     else if (mood === "happy") g.push(`<path d="M${f - 7 + gx} ${ey + 1}q2 -3 4 0M${f + 3 + gx} ${ey + 1}q2 -3 4 0" stroke="${C.ink}" stroke-width="1.7" fill="none" stroke-linecap="round"/>`);
     else g.push(eye(f - 5 + gx, ey + gy) + eye(f + 5 + gx, ey + gy));
-    const mouth = { happy: `M${f - 5} ${m - 1}q5 5 10 0`, sad: `M${f - 4} ${m + 2}q4 -4 8 0`, cry: `M${f - 4} ${m + 2}q4 -4 8 0`, worried: `M${f - 4} ${m + 1}h8`, neutral: `M${f - 3} ${m}q3 2 6 0` }[mood];
+    const mouth = { happy: `M${f - 5} ${m - 1}q5 5 10 0`, sad: `M${f - 4} ${m + 2}q4 -4 8 0`, cry: `M${f - 4} ${m + 2}q4 -4 8 0`, worried: `M${f - 4} ${m + 1}h8`, upset: `M${f - 4} ${m + 2}q4 -2.5 8 0`, neutral: `M${f - 3} ${m}q3 2 6 0` }[mood];
     g.push(`<path d="${mouth}" stroke="${C.ink}" stroke-width="1.6" fill="none" stroke-linecap="round"/>`);
     if (mood === "happy") g.push(`<circle cx="${f - 9}" cy="${m - 2}" r="2.5" fill="${C.coral}" opacity=".35"/><circle cx="${f + 9}" cy="${m - 2}" r="2.5" fill="${C.coral}" opacity=".35"/>`);
     // 背包、拐杖
@@ -146,6 +147,8 @@
     easel: (x, y) => `<path d="M${x} ${y + 80}l20 -80 20 80M${x + 20} ${y}v80" stroke="${C.wood}" stroke-width="4"/><rect x="${x + 2}" y="${y + 6}" width="36" height="40" fill="#fff" stroke="${C.gray}"/>`,
     paper: (x, y) => `<rect x="${x}" y="${y}" width="16" height="20" rx="2" fill="#fff" stroke="${C.gray}"/><path d="M${x + 3} ${y + 6}h10M${x + 3} ${y + 10}h10M${x + 3} ${y + 14}h6" stroke="${C.gray}"/>`,
     clap: (x, y) => `<path d="M${x - 8} ${y - 4}l-4 -4M${x + 8} ${y - 4}l4 -4M${x} ${y - 8}v-5" stroke="${C.amber}" stroke-width="2" stroke-linecap="round"/>`,
+    napkin: (x, y, r = 0) => `<rect x="${x}" y="${y}" width="14" height="10" rx="2" fill="#fff" stroke="${C.gray}" transform="rotate(${r} ${x + 7} ${y + 5})"/>`,
+    splash: (x, y) => `<path d="M${x} ${y}l-6 -8M${x + 8} ${y - 2}l2 -10M${x + 16} ${y}l7 -7" stroke="#b9825a" stroke-width="2" stroke-linecap="round" opacity=".7"/>`,
     glow: (x, y, r = 50) => `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * 0.9}" fill="url(#artGlow)"/>`, // 2.0：主角背後柔光，引導視線
     shadow: (x, y, rx = 16) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${rx * 0.22}" fill="${C.ink}" opacity=".12"/>`,
     heart: (x, y) => `<path d="M${x} ${y + 6}l-7 -7a4 4 0 0 1 7 -5a4 4 0 0 1 7 5z" fill="${C.coral}"/>`,
@@ -177,6 +180,9 @@
     // 看圖說好話：說好話、存好心、四給的多樣情境
     "pt-performance": ["同學表演完，台下的人鼓掌", () => BG.stage() + person({ x: 160, y: 104, s: 0.78, mood: "happy", shirt: C.purple, hairStyle: "long", hair: 1, arms: ["up", "up"] }) + person({ x: 90, y: 186, s: 0.8, mood: "happy", shirt: C.teal, arms: ["hug", "hug"], skin: 1 }) + P.clap(90, 112) + person({ x: 230, y: 186, s: 0.8, mood: "happy", shirt: C.amber, arms: ["hug", "hug"], hairStyle: "long", hair: 0 }) + P.clap(230, 112)],
     "pt-nervous-speech": ["同學上台報告前，拿著稿子很緊張", () => BG.classroom() + person({ x: 120, y: 158, mood: "worried", shirt: C.coral, arms: ["hold", "hold"], skin: 1 }) + P.paper(112, 96) + P.sweat(136, 54) + P.sweat(104, 58) + person({ x: 230, y: 190, s: 0.85, sit: true, mood: "neutral", shirt: C.teal, arms: "down", facing: -1 }) + person({ x: 290, y: 190, s: 0.85, sit: true, mood: "neutral", shirt: C.green, arms: "down", facing: -1, hairStyle: "long", hair: 2 })],
+    "st-spill-1": ["午餐時，一位同學不小心打翻飲料，灑到對方的筆記本", () => BG.cafeteria() + P.table(60, 118, 200) + P.paper(176, 98) + P.cup(150, 104, true) + P.splash(158, 98) + person({ x: 90, y: 166, mood: "worried", shirt: C.amber, arms: ["reach", "up"], skin: 0, facing: 1, gaze: [1.6, 1] }) + person({ x: 240, y: 166, mood: "worried", shirt: C.teal, arms: ["up", "down"], facing: -1, skin: 1, gaze: [-1.6, 1] }) + P.thought(160, 26, "!")],
+    "st-spill-2": ["筆記本濕了，對方皺起眉頭；打翻的同學連忙道歉", () => BG.cafeteria() + P.table(60, 118, 200) + P.cup(150, 104, true) + person({ x: 96, y: 166, mood: "worried", shirt: C.amber, arms: ["hug", "hug"], skin: 0, facing: 1, lean: 6, gaze: [1.6, 0] }) + person({ x: 234, y: 166, mood: "upset", shirt: C.teal, arms: ["hold", "down"], facing: -1, skin: 1, gaze: [-1.6, 0] }) + P.paper(214, 88) + P.bubble(40, 30, "I'm so sorry!")],
+    "st-spill-3": ["兩人一起把桌子擦乾淨，笑著和好", () => BG.cafeteria() + P.glow(160, 100, 80) + P.table(60, 118, 200) + person({ x: 120, y: 166, mood: "happy", shirt: C.amber, arms: ["reach", "down"], skin: 0, facing: 1, lean: 4 }) + P.napkin(144, 110, -10) + person({ x: 206, y: 166, mood: "happy", shirt: C.teal, arms: ["down", "reach"], facing: -1, skin: 1, lean: -4 }) + P.napkin(172, 110, 12) + P.heart(160, 50) + P.bubble(96, 18, "It's okay. Accidents happen.")],
     "pt-apology": ["朋友不小心打翻你的飲料，連忙道歉", () => BG.cafeteria() + P.table(60, 118, 200) + P.cup(150, 104, true) + person({ x: 90, y: 166, mood: "worried", shirt: C.amber, arms: ["reach", "chin"], skin: 0, facing: 1 }) + person({ x: 240, y: 166, mood: "neutral", shirt: C.teal, arms: "down", facing: -1, skin: 1 }) + P.bubble(52, 40, "I'm so sorry!")],
     "pt-cut-line": ["排隊買票時，有人直接走到最前面", () => BG.counter() + person({ x: 60, y: 172, mood: "neutral", shirt: C.teal, arms: "down", facing: 1 }) + person({ x: 110, y: 172, mood: "worried", shirt: C.green, arms: "down", facing: 1, hairStyle: "long", hair: 1 }) + person({ x: 160, y: 172, mood: "neutral", shirt: C.blue, arms: "down", facing: 1, skin: 2 }) + person({ x: 214, y: 172, mood: "worried", shirt: C.coral, arms: ["hold", "chin"], facing: 1, skin: 1 }) + P.phone(206, 118) + P.thought(110, 30, "?")],
     "pt-priority-seat": ["捷運博愛座上，年輕人閉著眼，旁邊長輩站著", () => BG.train() + person({ x: 90, y: 158, sit: true, mood: "sad", shirt: C.purple, arms: ["chin", "hold"], skin: 1 }) + person({ x: 190, y: 172, old: true, mood: "neutral", shirt: C.amber, hairStyle: "short", arms: ["up", "down"], facing: -1 }) + P.thought(160, 30, "?")],

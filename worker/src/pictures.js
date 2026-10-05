@@ -111,4 +111,16 @@ export const PICTURES = {
     ],
     help: "Share what you have so someone else stays dry.",
   },
+  "story-spill": {
+    level: "B2",
+    focus: "存好心、說好話",
+    desc: "A short story about an accident at lunch, an apology, and making up.",
+    panels: [
+      "In the cafeteria, a student accidentally knocks over a cup. The drink spills onto a classmate's notebook. Both are surprised.",
+      "The classmate holds up the wet notebook and frowns. The student who spilled the drink quickly says, \"I'm so sorry!\"",
+      "They clean the table together with napkins. The classmate smiles and says, \"It's okay. Accidents happen.\" They are friends again.",
+    ],
+    help: "Apologize sincerely and help fix the problem; when someone apologizes, accept it kindly.",
+    think: "Ask the learner to tell the story and to think about how BOTH people feel (the one who made the mistake and the one who was upset). Reward understanding both sides and forgiving, kind words.",
+  },
 };

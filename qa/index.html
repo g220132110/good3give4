@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Goodness AI 測試</title>
+<link rel="stylesheet" href="../css/app.css">
+<style>
+  body{padding-bottom:40px}
+  .wrap{max-width:860px}
+  .q-sum{display:flex;flex-wrap:wrap;gap:14px;font-weight:700}
+  .q-pass{color:var(--ok)} .q-warn{color:var(--near)} .q-fail{color:var(--miss)} .q-skip{color:var(--ink-soft)}
+  .q-row{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+  .q-row.q-pass{border-left-color:var(--ok)} .q-row.q-warn{border-left-color:var(--near)} .q-row.q-fail{border-left-color:var(--miss)} .q-row.q-run{border-left-color:var(--sky);box-shadow:0 0 0 2px color-mix(in srgb,var(--sky) 40%,transparent)}
+  .q-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .q-head .linkbtn{margin-left:auto}
+  .q-badge{font-size:.75rem;font-weight:700;border-radius:999px;padding:1px 9px;background:var(--paper);border:1px solid var(--line)}
+  .q-pass .q-badge{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+  .q-warn .q-badge{background:var(--near-bg);color:var(--near);border-color:transparent}
+  .q-fail .q-badge{background:var(--miss-bg);color:var(--miss);border-color:transparent}
+  .q-in{font-family:var(--display)}
+  .q-note{font-size:.85rem}
+  .q-out{font-size:.9rem}
+  .q-g{display:inline-block;font-size:.78rem;background:var(--ok-bg);color:var(--ok);border-radius:999px;padding:0 8px;margin-right:4px}
+  .q-checks{display:flex;flex-direction:column;gap:2px;font-size:.85rem}
+  .q-checks .ok{color:var(--ok)} .q-checks .warn{color:var(--near)} .q-checks .bad{color:var(--miss);font-weight:700}
+  .q-chg{color:var(--sky);font-weight:700}
+  pre{white-space:pre-wrap;font-size:.75rem;background:var(--paper);padding:8px;border-radius:8px;max-height:300px;overflow:auto}
+  details summary{cursor:pointer;font-size:.85rem;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="wrap stack" style="gap:14px">
+  <header class="ticket"><div><div class="label">Good English · QA</div><h1>Goodness AI 測試集</h1><div class="route">改提示詞或換模型後跑一次</div></div></header>
+  <div class="panel">
+    <p style="margin:0">把固定的測試句送到 AI，自動檢查：三好四給有沒有亂加、程度有沒有飄、回傳格式穩不穩、B2 有沒有比 A2 深。<b>✗ 失敗</b>要處理；<b>△ 注意</b>是 AI 合理但不一定每次一樣，人工看一下就好。</p>
+    <p class="muted" style="margin:0;font-size:.85rem">後端：<span id="qaEndpoint"></span>。每題間隔約 4.5 秒，會用掉 AI 額度（免費版一天有限，可以分組跑）。結果存在這台電腦。</p>
+    <div class="q-sum" id="qaSum"></div>
+    <div class="chips" id="qaGroups"></div>
+    <div class="row">
+      <button class="btn btn-ghost" id="qaStop" hidden>停止</button>
+      <button class="btn btn-ghost" id="qaExport">下載結果 JSON</button>
+      <button class="btn btn-ghost" id="qaClear">清除結果</button>
+    </div>
+  </div>
+  <div class="stack" style="gap:10px" id="qaList"></div>
+</div>
+<script src="cases.js"></script>
+<script src="qa.js"></script>
+</body>
+</html>

@@ -171,5 +171,16 @@ App.registerContent("picturetalk", {
         { en: "Finally, they walked together and stayed dry.", zh: "最後，他們一起走，沒有淋濕。" },
       ],
     },
+    {
+      id: "story-spill", level: "B2", tags: ["存好心", "說好話"], panels: ["st-spill-1", "st-spill-2", "st-spill-3"],
+      zh: "故事：打翻飲料之後", en: "Story: After the spill",
+      words: [{ en: "accidentally", zh: "不小心地" }, { en: "frown", zh: "皺眉" }, { en: "apologize", zh: "道歉" }, { en: "forgive", zh: "原諒" }],
+      model: [
+        { en: "At lunch, a boy accidentally knocked over his drink, and it spilled onto his classmate's notebook.", zh: "午餐時，一個男生不小心打翻飲料，灑到同學的筆記本上。" },
+        { en: "His classmate frowned because the notebook was wet, so the boy said, \"I'm so sorry!\"", zh: "同學因為筆記本濕了而皺眉，所以男生說：「真的很對不起！」" },
+        { en: "In the end, they cleaned the table together, and his classmate said, \"It's okay. Accidents happen.\"", zh: "最後，他們一起把桌子擦乾淨，同學說：「沒關係，意外難免。」" },
+        { en: "Both of them felt better: one said sorry, and the other forgave him.", zh: "兩個人都好過多了：一個人道歉，另一個人原諒了他。" },
+      ],
+    },
   ],
 });
