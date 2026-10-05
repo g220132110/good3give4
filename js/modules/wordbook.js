@@ -49,7 +49,7 @@
   document.addEventListener("words:changed", () => { if (viewEl && viewEl.isConnected && App.$(".wb-list, #wbGoRead")) render(viewEl); });
 
   App.registerModule({
-    id: "words", title: "生字本", tab: "生字本", icon: ICON.words, order: 3,
+    id: "words", title: "生字本", nav: "home", icon: ICON.words, order: 3,
     mount(el) { viewEl = el; render(el); },
     unmount() { viewEl = null; },
   });

@@ -259,7 +259,7 @@
 
   /* ---------- 模組介面 ---------- */
   App.registerModule({
-    id: "speaking", title: "旅遊口說", tab: "口說", icon: ICON.speak, order: 1,
+    id: "speaking", title: "旅遊口說", nav: "home", icon: ICON.speak, order: 1,
     mount(el) {
       prefs = App.store.get("speaking.prefs", null);
       best = App.store.get("speaking.best", {});

@@ -206,7 +206,7 @@
   }
 
   App.registerModule({
-    id: "reading", title: "英文新聞閱讀", tab: "閱讀", icon: ICON.read, order: 2,
+    id: "reading", title: "英文新聞閱讀", nav: "home", icon: ICON.read, order: 2,
     mount(el, params) {
       prefs = App.store.get("reading.prefs", null);
       readMap = App.store.get("reading.read", {});

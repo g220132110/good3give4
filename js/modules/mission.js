@@ -236,8 +236,10 @@
   }
 
   /* ---------- 模組介面 ---------- */
+  App.mission = { tasks, todayTask, streak, log, today }; // 給首頁與 Passport 用
+
   App.registerModule({
-    id: "mission", title: "Good Mission", tab: "微善", icon: TAB_ICON, order: 0.7, // order: 0 會被 App 當成 99
+    id: "mission", nav: "home", title: "Good Mission", icon: TAB_ICON, order: 0.7, // order: 0 會被 App 當成 99
     mount(el) {
       el.innerHTML = `<section id="msView" class="stack" style="gap:14px"></section>`;
       if (st.screen === "reflect") renderReflect(); else renderToday();

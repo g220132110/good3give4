@@ -7,6 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&family=JetBrains+Mono:wght@500&display=swap">
 <link rel="stylesheet" href="css/app.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#12343b">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Good English">
 </head>
 <body>
 <div class="wrap">
@@ -14,7 +20,7 @@
   <!-- 共用標頭：各模組用 App.setHeader() 改標題；#hdrAction 給模組放一個動作按鈕 -->
   <header class="ticket">
     <div>
-      <div class="label">English Pass · 英語通行證</div>
+      <div class="label">Good English · 三好四給</div>
       <h1 id="hdrTitle">English Pass</h1>
       <div class="route" id="hdrSub"></div>
     </div>
@@ -98,15 +104,19 @@
 <script src="data/roots.js"></script>  <!-- 字根家族與片語：放在內容包最後，只補字典沒有的字 -->
 
 <!-- 3. 功能模組（新增功能：在 js/modules/ 加檔案並在這裡加一行） -->
+<script src="js/modules/home.js"></script>      <!-- 首頁：四大面向、訪客模式 -->
 <script src="js/modules/saybetter.js"></script>
 <script src="js/modules/goodtalk.js"></script>
 <script src="js/modules/mission.js"></script>
 <script src="js/modules/picturetalk.js"></script>
+<script src="js/modules/passport.js"></script>  <!-- Goodness Passport 善行護照 -->
 <script src="js/modules/speaking.js"></script>
 <script src="js/modules/reading.js"></script>
 <script src="js/modules/wordbook.js"></script>
 <script src="js/modules/soon.js"></script>
 
 <script>App.start();</script>
+<!-- PWA：可加到主畫面、離線也能開（AI 功能仍需網路）。本機 file:// 開啟時不註冊 -->
+<script>if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body>
 </html>

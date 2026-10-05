@@ -380,3 +380,81 @@ h2.gt-kind{font-size:1.05rem;margin-top:2px}
 .pt-model>summary{cursor:pointer;padding:12px 16px;border:1px dashed var(--line);border-radius:14px;font-weight:700;list-style:none}
 .pt-model>summary::-webkit-details-marker{display:none}
 .pt-model[open]>summary{margin-bottom:10px}
+
+/* ================= 首頁：四大面向 ================= */
+.hm-hero{background:var(--ink);color:var(--paper);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden}
+.hm-hero::after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:var(--accent);opacity:.18}
+.hm-hero .label{color:color-mix(in srgb,var(--paper) 70%,transparent)}
+.hm-hero h2{font-family:var(--display);font-size:1.6rem;margin:0;line-height:1.2}
+.hm-hero p{margin:0;color:color-mix(in srgb,var(--paper) 85%,transparent)}
+.hm-top{display:flex;justify-content:space-between;align-items:center;gap:8px;position:relative;z-index:1}
+.hm-lang{border:1.5px solid color-mix(in srgb,var(--paper) 50%,transparent);background:transparent;color:var(--paper);border-radius:999px;padding:2px 12px;font-weight:700;font-family:var(--display)}
+.hm-today{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;width:100%}
+.hm-today-art .art{border-radius:10px;display:block}
+.hm-today-body{display:flex;flex-direction:column;gap:2px}
+.hm-today-body b{font-size:1.05rem;line-height:1.35}
+.hm-today-cta{align-self:flex-start;margin-top:4px;font-weight:700;color:var(--sky)}
+.hm-today-cta.ok{color:var(--ok)}
+.hm-pillars{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hm-pillar{--c:var(--accent);position:relative;background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.hm-sp{--c:var(--accent)} .hm-th{--c:var(--sky)} .hm-do{--c:var(--ok)} .hm-sh{--c:var(--miss)}
+.hm-p-head b{font-family:var(--display);display:block;line-height:1.2}
+.hm-p-head span{font-size:.85rem;color:var(--c);font-weight:700}
+.hm-pillar p{margin:0;font-size:.85rem;color:var(--ink-soft);line-height:1.45}
+.hm-p-links{display:flex;flex-direction:column;gap:4px;margin-top:auto}
+.hm-p-links button{border:none;background:color-mix(in srgb,var(--c) 12%,transparent);border-radius:8px;padding:6px 8px;text-align:left;font-size:.85rem;font-weight:500}
+.hm-p-count{position:absolute;top:10px;right:10px;font-family:var(--mono);font-size:.75rem;background:var(--c);color:var(--card);border-radius:999px;padding:0 7px}
+.hm-pass{text-align:left;width:100%;gap:8px}
+.hm-pass-row{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+.hm-pass-row span{display:flex;flex-direction:column}
+.hm-pass-row b{font-family:var(--display);font-size:1.5rem;line-height:1}
+.hm-pass-row small{font-size:.75rem;color:var(--ink-soft)}
+.hm-pass-go{margin-left:auto;color:var(--sky);font-weight:700}
+.hm-basics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hm-basics button{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 4px;font-size:.85rem}
+.hm-visitor .hm-line{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;font-family:var(--display);font-size:.95rem}
+
+/* ================= Goodness Passport ================= */
+.pp-cover{background:linear-gradient(135deg,var(--ink),color-mix(in srgb,var(--ink) 75%,var(--sky)));color:var(--paper);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px}
+.pp-cover .label{color:color-mix(in srgb,var(--paper) 70%,transparent)}
+.pp-cover h2{margin:0;font-family:var(--display)}
+.pp-cover p{margin:0;color:color-mix(in srgb,var(--paper) 85%,transparent)}
+.pp-meta{display:flex;gap:18px;margin-top:4px}
+.pp-meta b{font-family:var(--display);font-size:1.4rem;color:var(--accent)}
+.pp-grid{display:grid;gap:10px}
+.pp-3{grid-template-columns:repeat(3,1fr)}
+.pp-4{grid-template-columns:repeat(2,1fr)}
+@media (min-width:560px){.pp-4{grid-template-columns:repeat(4,1fr)}}
+.pp-stamp{--c:var(--ok);display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:10px 4px;border:1px dashed var(--line);border-radius:12px;opacity:.55}
+.pp-giving{--c:var(--near)}
+.pp-stamp.on{opacity:1;border-style:solid;border-color:color-mix(in srgb,var(--c) 40%,var(--line))}
+.pp-seal{width:52px;height:52px;border-radius:50%;border:3px solid var(--c);color:var(--c);display:grid;place-items:center;font-family:"Noto Serif TC",serif;font-size:1.5rem;font-weight:700;transform:rotate(var(--r));margin-bottom:4px}
+.pp-stamp:not(.on) .pp-seal{border-color:var(--line);color:var(--line)}
+.pp-stamp.on .pp-seal{animation:stampIn .45s cubic-bezier(.2,1.6,.4,1) both}
+.pp-stamp b{font-size:.9rem}
+.pp-stamp small{font-family:var(--mono);font-size:.65rem;color:var(--ink-soft)}
+.pp-n{font-family:var(--mono);font-size:.8rem;color:var(--c)}
+.pp-stamp:not(.on) .pp-n{color:var(--ink-soft)}
+.pp-src{width:100%;background:none;border-left:none;border-right:none;border-top:none;text-align:left}
+.pp-moment{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}
+.pp-moment:last-child{border-bottom:none}
+.pp-moment .en{font-family:var(--display);font-size:.9rem;color:var(--ink-soft)}
+.pp-date{font-family:var(--mono);font-size:.8rem;color:var(--ink-soft);padding-top:2px}
+.pp-note{font-size:.85rem;text-align:center;margin:0}
+
+/* ================= 完成小動畫：蓋章提示、徽章跳出 ================= */
+.gv-toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:20;display:flex;gap:10px;align-items:center;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.16);animation:toastIn .35s ease-out both;max-width:calc(100% - 32px)}
+.gv-toast.out{animation:toastOut .4s ease-in both}
+.gv-toast b{display:block;font-size:.85rem}
+.gv-toast-list{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.gv-stamp{width:38px;height:38px;flex:none;border-radius:50%;border:3px solid var(--miss);color:var(--miss);display:grid;place-items:center;font-weight:700;font-size:1.1rem;transform:rotate(-8deg);animation:stampIn .5s .1s cubic-bezier(.2,1.6,.4,1) both}
+.sb-good .gv-badge{animation:badgePop .4s cubic-bezier(.2,1.5,.4,1) both}
+.sb-good .sb-point:nth-child(3) .gv-badge{animation-delay:.08s}
+.sb-good .sb-point:nth-child(4) .gv-badge{animation-delay:.16s}
+.sb-good .sb-point:nth-child(5) .gv-badge{animation-delay:.24s}
+.gv-giving::before{content:"♥";font-size:.7em;margin-right:-.1em}
+@keyframes stampIn{from{transform:scale(1.8) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(var(--r,-8deg));opacity:1}}
+@keyframes badgePop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes toastIn{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+@keyframes toastOut{to{transform:translate(-50%,20px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.gv-toast,.gv-toast.out,.gv-stamp,.pp-stamp.on .pp-seal,.sb-good .gv-badge{animation:none}}

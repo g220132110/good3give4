@@ -7,6 +7,7 @@
 - **第三階段**：Think Well 換位思考 2 個、Global Share 文化大使 1 套（中英介紹卡、事實限制），與 Good Talk 共用對話引擎
 - **第四階段**：Good Mission 每日英文微善任務 10 個（Learn → Practice → Act → Reflect、連續天數與紀錄）
 - **插圖與看圖說好話**：App.art 程式繪製 SVG 插圖 29 張（對話情境、看圖、微善任務、三格故事）；看圖說好話 12 張單圖（A2／B1／B2，B2 為推想圖）＋ 3 組三格故事（/api/describe）
+- **第五階段（整合）**：四大面向首頁（Speak Well／Think Well／Do Well／Global Share）、Goodness Passport 善行護照、訪客模式（首頁 EN 切換＋一分鐘三好四給）、PWA（可加到主畫面、離線開啟）、完成時的蓋章小動畫；底部分頁由 7 個減為 5 個（首頁、說好話、對話、看圖、護照），微善、口說、閱讀、生字本從首頁進入
 - **看圖教學深度**：回饋分三層（你看到的／你理解到的／你還可以注意到）、故事結構（順序、時態、連接詞）、示範說法預設收起、程度與模式篩選
 
 ## 本機試用
@@ -23,6 +24,7 @@ node dev/e2e-goodtalk.mjs                        # Good Talk 瀏覽器實測（A
 node dev/e2e-phase3.mjs                          # Think Well、Global Share 瀏覽器實測
 node dev/e2e-mission.mjs                         # 微善任務瀏覽器實測
 node dev/e2e-picturetalk.mjs                     # 看圖說好話瀏覽器實測
+node dev/e2e-home.mjs                            # 首頁、Passport、PWA 瀏覽器實測
 # 插圖預覽：http://localhost:8787/dev/art.html
 ```
 
@@ -41,6 +43,9 @@ node dev/e2e-picturetalk.mjs                     # 看圖說好話瀏覽器實�
 | `js/core/art.js` | 新增：`App.art.scene(id)` 程式繪製的 SVG 插圖；之後可在 `App.art.images` 換成圖片檔 |
 | `js/modules/picturetalk.js` | 新增：看圖說好話（模式與程度篩選、單圖／三格故事、提示字、三層回饋、故事結構、示範收合、再說一次） |
 | `data/picturetalk/pictures.js` | 新增：12 張圖＋3 組故事的程度、提示字與示範說法（圖片說明在 `worker/src/pictures.js`） |
+| `js/modules/home.js` | 新增：首頁四大面向、今日微善、Passport 摘要、英文基本功、訪客模式（EN） |
+| `js/modules/passport.js` | 新增：Goodness Passport（三好四給印章、練習足跡、最近的微善） |
+| `manifest.webmanifest`、`sw.js`、`icons/` | 新增：PWA。sw.js 有網路就拿最新版，離線用存的那份；AI 不經過快取 |
 | `js/modules/mission.js` | 新增：Good Mission 每日微善任務（今日任務、跟讀、連到對話情境、反思、AI 看英文、紀錄與連續天數） |
 | `data/mission/tasks.js` | 新增：10 個微善任務 |
 | `js/modules/soon.js` | 修改：測驗不再佔底部分頁（空間給「微善」） |
@@ -50,11 +55,11 @@ node dev/e2e-picturetalk.mjs                     # 看圖說好話瀏覽器實�
 | `index.html` | 加入上述檔案，設定 `EP_AI_ENDPOINT`，標題改為 Good English, Good Life |
 | `dev/` | 本機伺服器與瀏覽器實測，不需部署 |
 
-原有的口說、閱讀、生字本都沒有改動；soon.js 只拿掉測驗的分頁。
+原有的口說、閱讀、生字本內容沒有改動，只是改從首頁進入（`nav: "home"`）；soon.js 只拿掉測驗的分頁。
 
 ## 上傳到 GitHub Pages
 
-只需要 `index.html`、`css/`、`js/`、`data/`。整份上傳也可以，`worker/` 與 `dev/` 不影響網站（裡面沒有金鑰）。
+需要 `index.html`、`manifest.webmanifest`、`sw.js`、`css/`、`js/`、`data/`、`icons/`。整份上傳也可以，`worker/` 與 `dev/` 不影響網站（裡面沒有金鑰）。
 
 ## 部署
 

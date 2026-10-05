@@ -44,7 +44,8 @@
 
   /* ---------- 模組註冊 ----------
    * 模組介面（見 ARCHITECTURE.md）：
-   * { id, title, tab, icon, order, soon?, mount(el, params), unmount?() }
+   * { id, title, tab, icon, order, soon?, nav?, mount(el, params), unmount?() }
+   * nav：沒有分頁的模組，要亮哪個分頁（例如微善任務亮「首頁」）
    */
   App.modules = [];
   App.registerModule = (m) => { App.modules.push(m); App.modules.sort((a, b) => (a.order || 99) - (b.order || 99)); };
@@ -76,7 +77,7 @@
     view.innerHTML = ""; view.onclick = null;
     const act = App.$("#hdrAction"); act.hidden = true; act.onclick = null;
     current = m;
-    const active = m.id === "soon" ? params[0] : m.id;
+    const active = m.id === "soon" ? params[0] : m.nav || m.id;
     App.$$(".tab").forEach((b) => b.setAttribute("aria-current", b.dataset.id === active ? "page" : "false"));
     m.mount(view, params);
     window.scrollTo(0, 0);

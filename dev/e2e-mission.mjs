@@ -24,7 +24,7 @@ await page.screenshot({ path: `${OUT}/ms-1-today.png`, fullPage: true });
 await page.click('[data-act="practice"]');
 await page.waitForSelector("#gtChat:not([hidden]) #gtLog");
 const jumped = await page.textContent("#gtChat h2");
-await page.click('.tab[data-id="mission"]');
+await page.goto("http://localhost:8787/#/mission");
 await page.waitForSelector(".ms-hero h2");
 await page.click('[data-act="did"]');
 await page.waitForSelector("#msFeel .chip");

@@ -55,13 +55,26 @@
       ${items.map((x) => `<div class="sb-point">${badge(x.name)}<p>${esc(x.evidence)}</p></div>`).join("")}</div>`;
   }
 
+  // 完成時的小動畫：右下角浮出蓋章提示，1.8 秒後消失（減少動態效果的設定下不動畫）
+  function toast(names) {
+    if (!names.length || typeof document === "undefined") return;
+    document.querySelectorAll(".gv-toast").forEach((t) => t.remove());
+    const t = document.createElement("div");
+    t.className = "gv-toast"; t.setAttribute("role", "status");
+    t.innerHTML = `<span class="gv-stamp">好</span><span><b>Goodness Passport ＋1</b><span class="gv-toast-list">${names.map(badge).join("")}</span></span>`;
+    document.body.appendChild(t);
+    setTimeout(() => t.classList.add("out"), 1800);
+    setTimeout(() => t.remove(), 2300);
+  }
+
   function logResult(res, source) {
     const items = [...(res.acts || []), ...(res.givings || [])];
     items.forEach((x, i) => log(x.name, i === 0 ? source : ""));
+    toast([...new Set(items.map((x) => x.name).filter(info))]);
     if (!items.length && source) {
       const s = stats(); s.sources[source] = (s.sources[source] || 0) + 1; App.store.set("virtue.log", s);
     }
   }
 
-  App.virtue = { ACTS, GIVINGS, info, badge, log, stats, panel, logResult };
+  App.virtue = { ACTS, GIVINGS, info, badge, log, stats, panel, logResult, toast };
 })();

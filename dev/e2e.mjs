@@ -12,7 +12,7 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
 page.on("console", (m) => m.type() === "error" && !/ERR_FAILED/.test(m.text()) && errors.push(m.text()));
 
-await page.goto("http://localhost:8787/");
+await page.goto("http://localhost:8787/#/saybetter");
 await page.waitForSelector("#sbCtx .chip");
 const tabs = await page.$$eval(".tab span", (s) => s.map((x) => x.textContent));
 await page.screenshot({ path: `${OUT}/1-input.png`, fullPage: true });
@@ -52,7 +52,7 @@ await page.click("#sbASend");
 const err = await page.textContent("#sbAErr");
 
 // 其他分頁還正常
-await page.click('.tab[data-id="speaking"]');
+await page.goto("http://localhost:8787/#/speaking");
 await page.waitForTimeout(300);
 const speakingOK = await page.locator("#spSetup, #spCourse").first().isVisible();
 
