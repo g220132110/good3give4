@@ -35,7 +35,20 @@
     App.store.set("ai.quota", { day: d, used: (q.day === d ? q.used : 0) + 1, limit: q.limit || 0 });
   }
 
+  // AI 太忙（503／429）時自動重試：等 1.5 秒、再等 3 秒，都失敗才回報
+  const RETRY_DELAYS = [1500, 3000];
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
   async function call(task, input, opts = {}) {
+    let r;
+    for (let i = 0; ; i++) {
+      r = await callOnce(task, input, opts);
+      if (!r.retryable || i >= RETRY_DELAYS.length) return r;
+      await wait(RETRY_DELAYS[i]);
+    }
+  }
+
+  async function callOnce(task, input, opts = {}) {
     const base = endpoint();
     if (!base) return { ok: false, offline: true, message: "尚未設定 AI 服務，先用示範內容練習。" };
 
@@ -53,7 +66,8 @@
         return {
           ok: false,
           offline: res.status >= 500,
-          quota: res.status === 429,
+          quota: res.status === 429 && body.error === "quota",
+          retryable: res.status === 503 || (res.status === 429 && body.error !== "quota"),
           message: body.message || "AI 暫時沒有回應，請稍後再試。",
         };
       }
@@ -61,7 +75,9 @@
       if (body.quota && body.quota.limit) {
         App.store.set("ai.quota", { day: today(), used: body.quota.used, limit: body.quota.limit });
       }
-      return { ok: true, demo: Boolean(body.demo), reason: body.reason || "", data: body.data };
+      const out = { ok: true, demo: Boolean(body.demo), reason: body.reason || "", data: body.data };
+      if (out.demo && out.reason === "busy") out.retryable = true; // 後端改回示範是因為太忙：也重試
+      return out;
     } catch (err) {
       return {
         ok: false,
