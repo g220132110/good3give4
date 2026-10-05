@@ -68,12 +68,15 @@
     };
     $("#sbAsk").innerHTML = `
       <div class="label">Step 2</div><h2>你會怎麼說？</h2>
-      <div class="sb-examples"><span class="muted">試試看：</span>${ctx.examples.map((x) => `<button class="sb-example" data-ex="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+      <div class="sb-examples"><span class="muted">不知道說什麼？常見的說法：</span>${ctx.examples.map((x) => `<button class="sb-example" data-ex="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+      <p class="muted sb-exhint" id="sbExHint" hidden>這是範例句，已放進下方框裡：可以直接按「送出」看 AI 怎麼改，也可以先改成你自己的話。</p>
       ${App.ask.block("sbA", "例如：" + ctx.examples[0], "按麥克風說一句英文，說完會自動分析")}`;
     $("#sbAsk").querySelector(".sb-examples").onclick = (e) => {
       const b = e.target.closest("[data-ex]"); if (!b) return;
       App.ask.showType("sbA");
-      $("#sbAIn").value = b.dataset.ex;
+      const box = $("#sbAIn");
+      box.value = b.dataset.ex; box.focus(); box.select();
+      $("#sbExHint").hidden = false;
     };
     App.ask.wire("sbA", submitFirst);
     const n = App.virtue.stats().sources[SOURCE] || 0;

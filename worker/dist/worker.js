@@ -430,9 +430,11 @@ Object.assign(SCENARIOS, {
 });
 var THREE_ACTS_FACTS = `Facts about the Three Acts of Goodness and the Four Givings (the ONLY facts you may use):
 - The Three Acts of Goodness are: Do Good Deeds, Speak Good Words, Think Good Thoughts. They cover our actions, our speech, and our mind.
-- The movement was introduced in 1998 by Venerable Master Hsing Yun, founder of Fo Guang Shan, a Buddhist order based in Taiwan.
+- The Three Acts of Goodness movement was promoted by Venerable Master Hsing Yun in April 1998, during a prayer ceremony in Taiwan.
+- Venerable Master Hsing Yun (1927-2023) was the founding master of Fo Guang Shan and the founder of the Buddha's Light International Association. He devoted his life to promoting Humanistic Buddhism.
 - The Four Givings are: give others confidence, give others joy, give others hope, give others convenience.
-- They come from Buddhist teaching, but the ideas are simple daily practices that anyone can try, whatever their religion.
+- The Three Acts of Goodness and the Four Givings encourage people to bring kindness into everyday life.
+- Their spirit is rooted in Humanistic Buddhist teachings, and it can be practiced in daily life by people of different backgrounds.
 - Everyday examples: helping someone carry things (good deeds), saying thank you or encouraging someone (good words), thinking from another person's side instead of judging (good thoughts).`;
 SCENARIOS["ambassador-three-acts"] = {
   kind: "ambassador",
@@ -443,7 +445,7 @@ SCENARIOS["ambassador-three-acts"] = {
   opener: "Hi! I saw a sign that says 'Three Acts of Goodness'. What does that mean?",
   goal: "Explain the Three Acts of Goodness and the Four Givings to Emma in simple English.",
   extra: `${THREE_ACTS_FACTS}
-Ask curious follow-up questions one at a time, such as: why is thinking good thoughts important, is this only for Buddhists, how can I practice it in daily life, what are the Four Givings.
+Ask curious follow-up questions one at a time, such as: why is thinking good thoughts important, can people from different backgrounds practice it, how can I practice it in daily life, what are the Four Givings.
 Never add facts that are not in the list above. If the learner says something that does not match the facts, stay in character and ask a gentle, confused question so they can explain again.`,
   analyzeExtra: `${THREE_ACTS_FACTS}
 In the summary, also say whether the learner's explanation matched these facts, and gently correct any misunderstanding.`,

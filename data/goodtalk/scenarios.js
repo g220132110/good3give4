@@ -195,19 +195,19 @@ App.registerContent("goodtalk", {
         { en: "The Three Acts of Goodness are: do good deeds, speak good words, and think good thoughts.", zh: "「三好」是：做好事、說好話、存好心。" },
         { en: "They are about what we do, what we say, and what we think.", zh: "它們分別關於我們的行為、言語和心念。" },
         { en: "The Four Givings are: give others confidence, joy, hope, and convenience.", zh: "「四給」是：給人信心、給人歡喜、給人希望、給人方便。" },
-        { en: "Venerable Master Hsing Yun of Fo Guang Shan started the Three Acts of Goodness movement in 1998.", zh: "佛光山星雲大師在 1998 年開始推動三好運動。" },
-        { en: "The ideas come from Buddhism, but anyone can practice them in daily life.", zh: "這些理念來自佛教，但每個人都能在生活中實踐。" },
+        { en: "Venerable Master Hsing Yun promoted the Three Acts of Goodness movement in Taiwan in 1998. He was the founding master of Fo Guang Shan.", zh: "星雲大師於 1998 年在台灣提倡三好運動。他是佛光山開山宗長。" },
+        { en: "Their spirit is rooted in Humanistic Buddhism, and people of different backgrounds can practice it in daily life.", zh: "它們的精神源自人間佛教，不同背景的人都能在日常生活中實踐。" },
         { en: "For example: help someone carry heavy bags, say thank you, and try to understand others before judging.", zh: "例如：幫人提重物、說聲謝謝、先試著理解別人再下判斷。" },
       ],
       demo: {
         replies: [
           "Oh, that's interesting! Why is thinking good thoughts important?",
-          "I like that. Is it only for Buddhists?",
+          "I like that. Can people from different backgrounds practice it?",
           "Cool! How can I practice it when I travel here?",
           "Nice! I also heard about the Four Givings. What are they?",
           "Thank you! I learned something special in Taiwan today.",
         ],
-        repliesZh: ["喔，好有趣！為什麼存好心很重要？", "我喜歡這個想法。這只適合佛教徒嗎？", "太好了！我在這裡旅行時可以怎麼實踐？", "不錯！我也聽說過四給，那是什麼？", "謝謝你！我今天在台灣學到很特別的東西。"],
+        repliesZh: ["喔，好有趣！為什麼存好心很重要？", "我喜歡這個想法。不同背景的人也能實踐嗎？", "太好了！我在這裡旅行時可以怎麼實踐？", "不錯！我也聽說過四給，那是什麼？", "謝謝你！我今天在台灣學到很特別的東西。"],
         hints: ["先說出三好是哪三個", "可以說好的想法會帶來好的話和行為", "這些是每個人都能做的日常小事", "舉一個旅行時能做的例子", "說出四給是哪四個"],
         analysis: {
           summary: "示範模式無法分析你剛剛說的話。以下是介紹三好四給時常用的好說法，可以先跟讀練習。",
