@@ -76,8 +76,8 @@
 <!-- 底部分頁：由已註冊的模組自動產生 -->
 <nav class="tabs" id="tabs" aria-label="功能"></nav>
 
-<!-- AI 後端網址：部署 worker 後填入；留空＝只用內容包示範。本機 node dev/server.mjs 會自動使用同一個網址 -->
-<script>window.EP_AI_ENDPOINT = "https://good-english-api.ct-f78.workers.dev";</script>
+<!-- AI 後端網址（Cloudflare Worker）；本機 node dev/server.mjs 時自動改用本機後端 -->
+<script>window.EP_AI_ENDPOINT = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? location.origin : "https://good-english-api.ct-f78.workers.dev";</script>
 
 <!-- 1. 核心 -->
 <script src="js/core/app.js"></script>
@@ -85,15 +85,18 @@
 <script src="js/core/dict.js"></script>
 <script src="js/core/virtue.js"></script>  <!-- 三好四給徽章與 Passport -->
 <script src="js/core/ai.js"></script>      <!-- 所有 AI 呼叫的出入口 -->
+<script src="js/core/ask.js"></script>     <!-- AI 練習共用：麥克風＋打字、跟讀、示範提示 -->
 
 <!-- 2. 內容包（新增一期新聞：複製一個 data/news/*.js 並在這裡加一行） -->
 <script src="data/speaking/travel.js"></script>
 <script src="data/news/2026-09-25.js"></script>
 <script src="data/saybetter/contexts.js"></script>
+<script src="data/goodtalk/scenarios.js"></script>
 <script src="data/roots.js"></script>  <!-- 字根家族與片語：放在內容包最後，只補字典沒有的字 -->
 
 <!-- 3. 功能模組（新增功能：在 js/modules/ 加檔案並在這裡加一行） -->
 <script src="js/modules/saybetter.js"></script>
+<script src="js/modules/goodtalk.js"></script>
 <script src="js/modules/speaking.js"></script>
 <script src="js/modules/reading.js"></script>
 <script src="js/modules/wordbook.js"></script>

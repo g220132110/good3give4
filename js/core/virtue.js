@@ -3,6 +3,8 @@
  *   App.virtue.badge("給人信心")        → 小徽章 HTML
  *   App.virtue.log("說好話", "saybetter") → 記錄一次實踐
  *   App.virtue.stats()                   → { acts:{說好話:3,…}, givings:{…}, sources:{…} }
+ *   App.virtue.panel(result)             → 「做得好的地方」面板 HTML（result.acts / result.givings）
+ *   App.virtue.logResult(result, 來源)    → 依分析結果記錄每一項三好四給
  *
  * 只記次數、只跟自己比，不排名、不打分數。
  */
@@ -46,5 +48,20 @@
     return App.store.get("virtue.log", { acts: {}, givings: {}, sources: {} });
   }
 
-  App.virtue = { ACTS, GIVINGS, info, badge, log, stats };
+  function panel(res, title = "這句話做得好的地方") {
+    const items = [...(res.acts || []), ...(res.givings || [])];
+    if (!items.length) return "";
+    return `<div class="panel sb-good"><div class="label">What you gave</div><h2>${esc(title)}</h2>
+      ${items.map((x) => `<div class="sb-point">${badge(x.name)}<p>${esc(x.evidence)}</p></div>`).join("")}</div>`;
+  }
+
+  function logResult(res, source) {
+    const items = [...(res.acts || []), ...(res.givings || [])];
+    items.forEach((x, i) => log(x.name, i === 0 ? source : ""));
+    if (!items.length && source) {
+      const s = stats(); s.sources[source] = (s.sources[source] || 0) + 1; App.store.set("virtue.log", s);
+    }
+  }
+
+  App.virtue = { ACTS, GIVINGS, info, badge, log, stats, panel, logResult };
 })();
