@@ -83,3 +83,9 @@ test("格式錯誤時重試，兩次都錯就改回示範", async () => {
     globalThis.fetch = realFetch;
   }
 });
+
+test("KV 寫入失敗時不影響 AI 功能", async () => {
+  const env = { QUOTA: { get: async () => null, put: async () => { throw new Error("KV put() limit exceeded"); } } };
+  const res = await call("/api/rewrite", { text: "hi" }, env, { "x-ep-device": "abc" });
+  assert.equal(res.status, 200);
+});

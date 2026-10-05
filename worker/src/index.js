@@ -52,13 +52,19 @@ async function checkQuota(req, env) {
     [`q:${day}:ip:${ip}`, Number(env.IP_DAILY_LIMIT || 200)],
     [`q:${day}:all`, Number(env.GLOBAL_DAILY_LIMIT || 3000)],
   ];
-  const counts = await Promise.all(limits.map(([k]) => env.QUOTA.get(k).then((v) => Number(v || 0))));
-  const over = counts.findIndex((c, i) => c >= limits[i][1]);
-  if (over >= 0) return { ok: false, scope: ["device", "ip", "global"][over] };
-  await Promise.all(
-    limits.map(([k], i) => env.QUOTA.put(k, String(counts[i] + 1), { expirationTtl: 2 * 86400 })),
-  );
-  return { ok: true, used: counts[0] + 1, limit: limits[0][1] };
+  // KV 免費方案每天只能寫 1,000 次；計數出錯時寧可不限制，也不讓 AI 功能壞掉
+  try {
+    const counts = await Promise.all(limits.map(([k]) => env.QUOTA.get(k).then((v) => Number(v || 0))));
+    const over = counts.findIndex((c, i) => c >= limits[i][1]);
+    if (over >= 0) return { ok: false, scope: ["device", "ip", "global"][over] };
+    await Promise.all(
+      limits.map(([k], i) => env.QUOTA.put(k, String(counts[i] + 1), { expirationTtl: 2 * 86400 })),
+    );
+    return { ok: true, used: counts[0] + 1, limit: limits[0][1] };
+  } catch (err) {
+    console.error("quota skipped:", err.message);
+    return { ok: true, used: 0, limit: 0 };
+  }
 }
 
 // ---------- 呼叫模型：格式錯誤重試一次 ----------
