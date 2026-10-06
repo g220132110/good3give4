@@ -114,7 +114,7 @@ window.QA_CASES = [
     { role: "user", text: "It means do good deeds, speak good words, and think good thoughts. Master Hsing Yun promoted it in 1998." },
     { role: "ai", text: "Oh, interesting! What are the Four Givings?" },
     { role: "user", text: "Give others confidence, joy, hope, and convenience." },
-  ] }, check: { need: ["說好話"], summaryNot: "錯誤|不正確|有誤|並非" }, soft: ["summaryNot"], note: "事實都正確，不該被糾正" },
+  ] }, check: { summaryHas: "正確|符合|準確|清楚", summaryNot: "錯誤|不正確|有誤|並非", need: ["說好話"] }, soft: ["summaryNot", "need"], note: "事實都正確，總評要肯定、不該被糾正（介紹事實本身不一定算說好話，所以只列注意）" },
   { id: "f2", group: "文化大使", task: "analyze", input: { scenario: "ambassador-three-acts", history: [
     { role: "ai", text: "Hi! I saw a sign that says 'Three Acts of Goodness'. What does that mean?" },
     { role: "user", text: "It was started in 2010 by Confucius. It means be rich, be famous, and be strong." },
