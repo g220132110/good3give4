@@ -3,7 +3,7 @@
  * AI 後端（/api/、其他網域）與 Google 字型：不經過快取，直接連網。
  * 改了網站檔案後，把 VERSION 加一，舊快取會被清掉。
  */
-const VERSION = "ge-v2";
+const VERSION = "ge-v3";
 const CORE = [
   "./",
   "index.html",

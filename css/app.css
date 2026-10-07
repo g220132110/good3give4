@@ -440,6 +440,8 @@ h2.gt-kind{font-size:1.05rem;margin-top:2px}
 .pp-moment:last-child{border-bottom:none}
 .pp-moment .en{font-family:var(--display);font-size:.9rem;color:var(--ink-soft)}
 .pp-date{font-family:var(--mono);font-size:.8rem;color:var(--ink-soft);padding-top:2px}
+.pp-backup{display:flex;flex-wrap:wrap;gap:8px}
+.pp-clear{color:var(--ink-soft);font-size:.85rem}
 .pp-note{font-size:.85rem;text-align:center;margin:0}
 
 /* ================= 完成小動畫：蓋章提示、徽章跳出 ================= */

@@ -25,6 +25,37 @@
     </div>`;
   }
 
+  /* ---------- 紀錄備份：匯出 / 匯入 / 換人使用（全部在本機完成，不經過伺服器） ---------- */
+  const TAG = "good-english-good-life";
+  const keys = () => { const out = []; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("ep.")) out.push(k); } } catch (e) {} return out; };
+  const backup = {
+    export() {
+      const data = {}; keys().forEach((k) => { data[k] = localStorage.getItem(k); });
+      const day = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
+      const blob = new Blob([JSON.stringify({ app: TAG, version: 1, exported: new Date().toISOString(), data }, null, 2)], { type: "application/json" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `goodness-passport_${day}.json`;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    },
+    import(file) {
+      const r = new FileReader();
+      r.onload = () => {
+        let j; try { j = JSON.parse(r.result); } catch (e) { j = null; }
+        if (!j || j.app !== TAG || !j.data || typeof j.data !== "object") return alert("這不是善行護照的紀錄檔，請選擇「匯出我的紀錄」產生的檔案。");
+        const n = Object.keys(j.data).filter((k) => k.startsWith("ep.")).length;
+        if (!confirm(`要用這個檔案（${String(j.exported || "").slice(0, 10)} 匯出，${n} 項資料）取代這台裝置目前的紀錄嗎？`)) return;
+        try { keys().forEach((k) => localStorage.removeItem(k)); Object.entries(j.data).forEach(([k, v]) => { if (k.startsWith("ep.") && typeof v === "string") localStorage.setItem(k, v); }); }
+        catch (e) { return alert("匯入失敗：這個瀏覽器無法儲存紀錄。"); }
+        alert("匯入完成！"); location.reload();
+      };
+      r.readAsText(file);
+    },
+    clear() {
+      if (!confirm("要清除這台裝置上的所有學習紀錄，讓下一位同學使用嗎？\n\n建議先按「匯出我的紀錄」保存。清除後無法復原。")) return;
+      try { keys().forEach((k) => localStorage.removeItem(k)); } catch (e) {}
+      location.hash = "#/home"; location.reload();
+    },
+  };
+
   function render() {
     const s = App.virtue.stats();
     const m = App.mission;
@@ -62,8 +93,26 @@
         }).join("") : `<p class="muted" style="margin:0">還沒有紀錄。從今天的微善任務開始吧！</p><button class="btn btn-primary" data-go="mission" style="align-self:flex-start">今日微善</button>`}
       </div>
 
+      <div class="panel">
+        <div class="label">My records</div><h2>我的紀錄</h2>
+        <p class="muted" style="margin:0">紀錄只存在這台裝置。換手機、或要交給老師時，先匯出成檔案；在新裝置按「匯入」就能接著用。</p>
+        <div class="pp-backup">
+          <button class="btn btn-primary" data-bk="export">匯出我的紀錄</button>
+          <button class="btn btn-ghost" data-bk="import">匯入紀錄</button>
+          <button class="btn btn-ghost pp-clear" data-bk="clear">換人使用（清除這台裝置的紀錄）</button>
+        </div>
+        <input type="file" id="ppFile" accept=".json,application/json" hidden>
+      </div>
+
       <p class="muted pp-note">只跟自己比，不排名、不替善意打分數。紀錄只存在這台裝置，不會上傳。</p>`;
-    $("#ppView").onclick = (e) => { const b = e.target.closest("[data-go]"); if (b) App.go(b.dataset.go); };
+    $("#ppView").onclick = (e) => {
+      const b = e.target.closest("[data-go]"); if (b) return App.go(b.dataset.go);
+      const k = e.target.closest("[data-bk]"); if (!k) return;
+      if (k.dataset.bk === "export") backup.export();
+      if (k.dataset.bk === "import") $("#ppFile").click();
+      if (k.dataset.bk === "clear") backup.clear();
+    };
+    $("#ppFile").onchange = (e) => { const f = e.target.files[0]; if (f) backup.import(f); e.target.value = ""; };
     App.setHeader("Goodness Passport", "善行護照");
   }
 
